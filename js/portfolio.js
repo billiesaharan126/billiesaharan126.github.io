@@ -1,20 +1,19 @@
 const writingProjects = [
     {
-        title: "Example Writing Piece",
-        description: "A placeholder example showing how uploaded writing samples will appear.",
-        category: "Essays",
-        link: "writing/essays/example.pdf"
+        title: "Coming soon!",
+        description: "Writing samples will be added here.",
+        category: "None",
+        link: "#"
     }
 ];
 
 
 const softwareProjects = [
     {
-        title: "Example Software Project",
-        description: "A placeholder example showing how software projects will appear.",
-        category: "Games",
+        title: "Coming soon!",
+        description: "Software projects will be added here.",
         image: "images/example.png",
-        link: "#",
+        demo: "#",
         github: "#"
     }
 ];
