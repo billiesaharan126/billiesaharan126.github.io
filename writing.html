@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writing | Jeremy Jackson</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="writing.html">Writing</a>
+        <a href="software.html">Software Development</a>
+    </nav>
+
+    <main>
+        <section class="portfolio-section">
+
+            <h1>Writing</h1>
+
+            <div class="filters">
+                <button>All</button>
+                <button>Essays</button>
+                <button>Articles</button>
+                <button>Etc</button>
+            </div>
+
+            <div id="writing-container"></div>
+
+        </section>
+    </main>
+
+
+    <script src="js/portfolio.js"></script>
+
+    <script>
+        const container = document.getElementById("writing-container");
+
+        writingProjects.forEach(project => {
+
+            container.innerHTML += `
+                <div class="portfolio-card">
+
+                    <h2>
+                        <a href="${project.link}">
+                            ${project.title}
+                        </a>
+                    </h2>
+
+                    <p>
+                        ${project.description}
+                    </p>
+
+                    <div class="tags">
+                        ${project.tags.map(tag => `<span>${tag}</span>`).join("")}
+                    </div>
+
+                </div>
+            `;
+
+        });
+    </script>
+
+</body>
+
+</html>
