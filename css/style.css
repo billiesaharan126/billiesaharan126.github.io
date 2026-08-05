@@ -1,0 +1,36 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f3ead8;
+    color: #2e2a24;
+    margin: 0;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 25px;
+}
+
+nav a {
+    color: #2e2a24;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.about {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 40px;
+    background-color: #faf6ee;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.profile-image {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 25px;
+    border-radius: 50%;
+    background-color: #ddd0ba;
+}
