@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ASCII_SUDOKU.EXE</title>
+<!-- Optional shared leaderboard client — see leaderboard.html / leaderboard-client.js.
+     Adjust the relative path below to match your actual repo layout. -->
+<script type="module" src="./leaderboard-client.js" onerror="console.warn('[Leaderboard] shared client not found — running with local stub only.')"></script>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; min-height: 100dvh; height: 100%; overflow: hidden; background: #000;
+    font-family: 'Courier New', Courier, monospace; color: #33ff33;
+  }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; user-select: none; }
+  #phone { width: min(100%, 420px); height: min(100dvh - 16px, 860px); display: flex; flex-direction: column; gap: 8px; }
+
+  #hud { display: flex; flex-direction: column; gap: 4px; border: 1px solid #1f8f1f; border-radius: 6px; padding: 6px 8px; background: #001200; flex-shrink: 0; }
+  #hudTop { display: flex; justify-content: space-between; align-items: baseline; }
+  #hudScore { font-size: 20px; font-weight: bold; text-shadow: 0 0 6px #0f0; letter-spacing: 1px; }
+  #hudTimer { font-size: 12px; color: #6fcf6f; }
+  #hudBottom { display: flex; justify-content: space-between; gap: 6px; }
+  .chip { flex: 1; text-align: center; font-size: 13px; padding: 4px 2px; border: 1px solid #1f8f1f; border-radius: 4px; background: #000f00; letter-spacing: 0.5px; }
+  #chipMistakes { color: #ff8888; }
+  #chipHints { color: #55ddff; }
+  #chipDifficulty { color: #cc66ff; }
+  #pauseBtn { background: #001a00; color: #33ff33; border: 1px solid #1f8f1f; font-family: inherit; font-size: 13px; padding: 2px 10px; border-radius: 4px; cursor: pointer; }
+
+  #screenWrap { position: relative; width: 100%; flex: 1; min-height: 0; display: flex; justify-content: center; align-items: center; }
+  #boardCanvas { background: #000; display: block; width: 100%; max-width: 400px; height: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; box-shadow: 0 0 2px #0f0 inset, 0 0 16px rgba(0,255,0,0.45); }
+  #scan { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 6px;
+    background: repeating-linear-gradient(rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,255,0,0.05) 3px, rgba(0,255,0,0.05) 3px); }
+
+  #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.92); border-radius: 6px; overflow: hidden; }
+  .screen { display: none; flex-direction: column; align-items: center; text-align: center; padding: 8px 8px 6px; width: 100%; height: 100%; overflow: hidden; box-sizing: border-box; justify-content: center; gap: 4px; }
+  .screen.active { display: flex; }
+  .screen h1 { font-size: 16px; letter-spacing: 1.5px; text-shadow: 0 0 8px #0f0; margin: 4px 0 8px; }
+  .screen h2 { font-size: 13px; color: #6fcf6f; margin: 10px 0 6px; letter-spacing: 1px; }
+  .bodytext { font-size: 12.5px; line-height: 1.7; color: #9fdf9f; max-width: 320px; }
+  .statline { font-size: 11.5px; color: #6fcf6f; margin: 2px 0; }
+  .btn { background: #001a00; color: #33ff33; border: 1px solid #33ff33; font-family: inherit; font-size: 13px; padding: 8px 12px; margin: 3px 2px;
+    cursor: pointer; border-radius: 4px; letter-spacing: 0.5px; width: 100%; max-width: 280px; }
+  .btn:active { background: #0f0; color: #000; }
+  .btn.small { font-size: 11px; padding: 6px 8px; width: auto; min-width: 96px; }
+  .btn.danger { border-color: #ff5555; color: #ff8888; }
+  .btn.gold { border-color: #ffd24d; color: #ffd24d; }
+  .btn[disabled] { opacity: 0.35; cursor: default; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .menuGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; max-width: 300px; margin-top: 4px; }
+  .menuGrid .btn { margin: 0; width: 100%; font-size: 11px; padding: 7px 4px; }
+  .list { width: 100%; max-width: 340px; text-align: left; margin-top: 6px; }
+  .listItem { border: 1px solid #1f8f1f; border-radius: 4px; padding: 7px 9px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; }
+  .listItem.locked { opacity: 0.45; }
+  .listItem .meta { font-size: 10.5px; color: #6fcf6f; }
+  .swatch { font-size: 16px; width: 22px; text-align: center; }
+  #crashText { color: #ff5c5c; font-size: 13px; line-height: 1.8; text-shadow: 0 0 6px #ff0000; }
+  #crashText .prompt { color: #6fcf6f; }
+  .newHigh { font-size: 13px; text-shadow: 0 0 6px currentColor; margin: 4px 0; }
+  .achvToast { color: #cc66ff; font-size: 11.5px; margin: 2px 0; }
+
+  .adSlot { width: 100%; max-width: 320px; min-height: 36px; border: 1px dashed #1f8f1f; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+    text-align: center; color: #3a6b3a; font-size: 9.5px; line-height: 1.35; padding: 4px 8px; margin: 4px 0; letter-spacing: 0.3px; }
+
+  #numpad { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+  .numRow { display: flex; gap: 6px; }
+  .numBtn { flex: 1; background: #001a00; color: #33ff33; border: 1px solid #33ff33; font-family: inherit; font-size: 14px; padding: 9px 0; border-radius: 6px; cursor: pointer; }
+  .numBtn:active { background: #0f0; color: #000; }
+  .actionBtn { flex: 1; background: #001a00; color: #cc66ff; border: 1px solid #cc66ff; font-family: inherit; font-size: 11.5px; padding: 9px 4px; border-radius: 6px; cursor: pointer; }
+  .actionBtn:active { background: #cc66ff; color: #000; }
+  #hint { font-size: 10.5px; color: #1f8f1f; text-align: center; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div id="phone">
+
+  <div id="hud">
+    <div id="hudTop">
+      <span id="hudScore">SCORE 0</span>
+      <button id="pauseBtn">II PAUSE</button>
+      <span id="hudTimer">00:00</span>
+    </div>
+    <div id="hudBottom">
+      <div class="chip" id="chipMistakes">MISTAKES 0/3</div>
+      <div class="chip" id="chipHints">HINTS 0</div>
+      <div class="chip" id="chipDifficulty">EASY</div>
+    </div>
+  </div>
+
+  <div id="screenWrap">
+    <canvas id="boardCanvas"></canvas>
+    <div id="scan"></div>
+
+    <div id="overlay">
+
+      <div class="screen active" id="scr-start">
+        <h1>&gt; ASCII_SUDOKU.EXE</h1>
+        <div style="margin-bottom:6px;">
+          <label style="font-size:10.5px;color:#6fcf6f;letter-spacing:0.5px;">LEADERBOARD NAME</label><br>
+          <input id="playerNameInput" type="text" maxlength="20" placeholder="ANON"
+            style="background:#000f00;border:1px solid #1f8f1f;color:#33ff33;font-family:inherit;
+            font-size:13px;padding:6px 8px;border-radius:4px;width:170px;text-align:center;margin-top:4px;">
+        </div>
+        <div class="bodytext" id="startStats"></div>
+        <div class="menuGrid">
+          <button class="btn small" id="easyBtn">EASY</button>
+          <button class="btn small" id="mediumBtn">MEDIUM</button>
+          <button class="btn small" id="hardBtn">HARD</button>
+          <button class="btn small" id="expertBtn">EXPERT</button>
+        </div>
+        <button class="btn" id="dailyBtn">DAILY CHALLENGE</button>
+        <div class="menuGrid">
+          <button class="btn small" id="shopBtn">THEMES</button>
+          <button class="btn small" id="achvBtn">ACHIEVEMENTS</button>
+          <button class="btn small" id="howtoBtn">HOW TO PLAY</button>
+          <button class="btn small" id="settingsBtn">SETTINGS</button>
+          <button class="btn small" id="leaderboardBtn" style="grid-column: span 2;">LEADERBOARD</button>
+        </div>
+        <!-- ADMOB_BANNER_MOUNT: mount a banner AdView/element inside #adSlot-start -->
+        <div class="adSlot" id="adSlot-start">the everwatching eye is oh so sleepy. does it dream?</div>
+      </div>
+
+      <div class="screen" id="scr-howto">
+        <h1>&gt; HOW_TO_PLAY</h1>
+        <div class="bodytext">
+          Tap a cell, then tap a number below to fill it. ERASE clears it, HINT reveals it (costs a little score).<br><br>
+          Fill every row, column, and 3x3 box with 1-9, no repeats.<br><br>
+          3 mistakes and the run fails — you'll get one chance to watch an ad and keep going.<br><br>
+          Score builds from correct entries, streaks, and finishing under par time. Credits carry
+          between puzzles and unlock cosmetic themes — never gameplay advantages.
+        </div>
+        <button class="btn" onclick="showScreen('start')">BACK</button>
+      </div>
+
+      <div class="screen" id="scr-shop">
+        <h1>&gt; THEME_SHOP</h1>
+        <div class="statline" id="shopCredits">CREDITS: 0</div>
+        <div class="list" id="shopList"></div>
+        <button class="btn" onclick="showScreen('start')">BACK</button>
+      </div>
+
+      <div class="screen" id="scr-achv">
+        <h1>&gt; ACHIEVEMENTS</h1>
+        <div class="statline" id="achvProgress"></div>
+        <div class="list" id="achvList"></div>
+        <button class="btn" onclick="showScreen('start')">BACK</button>
+      </div>
+
+      <div class="screen" id="scr-settings">
+        <h1>&gt; SETTINGS</h1>
+        <div class="row">
+          <button class="btn small" id="soundToggleBtn">SOUND: ON</button>
+          <button class="btn small" id="crtToggleBtn">CRT FX: ON</button>
+        </div>
+        <h2>DANGER ZONE</h2>
+        <button class="btn danger small" id="resetSaveBtn">RESET SAVE DATA</button>
+        <button class="btn" style="margin-top:14px;" onclick="showScreen('start')">BACK</button>
+      </div>
+
+      <div class="screen" id="scr-leaderboard">
+        <h1>&gt; LEADERBOARD</h1>
+        <div class="bodytext" id="leaderboardBody">Loading...</div>
+        <button class="btn" onclick="showScreen('start')">BACK</button>
+      </div>
+
+      <div class="screen" id="scr-paused">
+        <h1>&gt; PAUSED</h1>
+        <div class="bodytext">The grid holds still. It's used to waiting.</div>
+        <!-- ADMOB_BANNER_MOUNT: mount a banner AdView/element inside #adSlot-paused -->
+        <div class="adSlot" id="adSlot-paused">the everwatching eye is oh so sleepy. does it dream?</div>
+        <button class="btn" id="resumeBtn">RESUME</button>
+        <button class="btn small" id="pauseSoundBtn">SOUND: ON</button>
+        <button class="btn danger" id="quitBtn">QUIT TO MENU</button>
+      </div>
+
+      <div class="screen" id="scr-crash">
+        <h1>&gt; SYSTEM_FAILURE</h1>
+        <div id="crashText">
+          <span class="prompt">&gt;</span> FATAL_ERROR :: LOGIC_CORRUPTION_DETECTED<br>
+          <span class="prompt">&gt;</span> Your solution has been rejected.<br>
+          <span class="prompt">&gt;</span> REASON: MISTAKE_THRESHOLD_EXCEEDED
+        </div>
+        <div class="statline" id="crashScore" style="margin-top:10px;"></div>
+        <button class="btn gold" id="watchAdBtn">▶ WATCH AD TO CONTINUE</button>
+        <button class="btn" id="noThanksBtn">NO THANKS</button>
+      </div>
+
+      <div class="screen" id="scr-final">
+        <h1 id="finalTitle">&gt; RUN_COMPLETE</h1>
+        <div id="finalBanner" class="newHigh" style="display:none;"></div>
+        <div class="bodytext" id="finalStats"></div>
+        <div id="finalAchvWrap"></div>
+        <button class="btn small" id="submitScoreBtn">SUBMIT TO LEADERBOARD</button>
+        <div class="statline" id="leaderboardStatus"></div>
+        <!-- ADMOB_BANNER_MOUNT: mount a banner AdView/element inside #adSlot-final -->
+        <div class="adSlot" id="adSlot-final">the everwatching eye is oh so sleepy. does it dream?</div>
+        <button class="btn gold" id="doubleCreditsBtn">▶ WATCH AD: DOUBLE CREDITS</button>
+        <button class="btn" id="newPuzzleBtn">NEW PUZZLE</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="numpad">
+    <div class="numRow">
+      <button class="numBtn" data-n="1">1</button>
+      <button class="numBtn" data-n="2">2</button>
+      <button class="numBtn" data-n="3">3</button>
+      <button class="numBtn" data-n="4">4</button>
+      <button class="numBtn" data-n="5">5</button>
+    </div>
+    <div class="numRow">
+      <button class="numBtn" data-n="6">6</button>
+      <button class="numBtn" data-n="7">7</button>
+      <button class="numBtn" data-n="8">8</button>
+      <button class="numBtn" data-n="9">9</button>
+      <button class="numBtn" id="eraseBtn">✕</button>
+    </div>
+    <div class="numRow">
+      <button class="actionBtn" id="hintBtn">HINT</button>
+      <button class="actionBtn" id="pauseBtn2">PAUSE</button>
+    </div>
+  </div>
+  <div id="hint">tap a cell, then a number &mdash; 3 mistakes ends the run</div>
+
+</div>
+
+<script>
+/* =========================================================================
+   ASCII SUDOKU — shares its save/screen/audio/ads/leaderboard architecture
+   with the rest of this game family (see ascii_subway_runner.html).
+   ========================================================================= */
+
+/* ---------------- SAVE SYSTEM ---------------- */
+// localStorage is per-origin; your dev/test data never ships with the game.
+// Bump this key right before a public launch commit for a guaranteed clean slate.
+const SAVE_KEY = 'asciiSudokuSave_v1';
+
+const DEFAULT_SAVE = {
+  version: 1,
+  highScore: 0,
+  credits: 0,
+  playerName: '',
+  settings: { sound: true, crt: true },
+  stats: {
+    puzzlesSolved: 0,
+    puzzlesFailed: 0,
+    totalMistakes: 0,
+    totalHintsUsed: 0,
+    flawlessClears: 0,
+    totalPlaytimeMs: 0,
+    creditsEarnedLifetime: 0,
+    creditsSpent: 0,
+    dailyCompletions: 0,
+    bestTimeMs: { easy: null, medium: null, hard: null, expert: null },
+  },
+  achievements: {},
+  unlocked: { themes: ['classic'] },
+  equippedTheme: 'classic',
+  daily: { date: '', played: false, solved: false, bestScore: 0, streak: 0, lastSolvedDate: '' },
+  adState: { puzzlesSinceInterstitial: 0 },
+};
+
+let save = structuredClone(DEFAULT_SAVE);
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      save = {
+        ...structuredClone(DEFAULT_SAVE),
+        ...parsed,
+        stats: { ...DEFAULT_SAVE.stats, ...(parsed.stats || {}), bestTimeMs: { ...DEFAULT_SAVE.stats.bestTimeMs, ...((parsed.stats || {}).bestTimeMs || {}) } },
+        settings: { ...DEFAULT_SAVE.settings, ...(parsed.settings || {}) },
+        unlocked: { themes: (parsed.unlocked && parsed.unlocked.themes) || ['classic'] },
+        daily: { ...DEFAULT_SAVE.daily, ...(parsed.daily || {}) },
+        adState: { ...DEFAULT_SAVE.adState, ...(parsed.adState || {}) },
+        achievements: parsed.achievements || {},
+      };
+    }
+  } catch (err) {
+    console.error('[Save] load failed, using defaults:', err);
+  }
+}
+function saveGame() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }
+  catch (err) { console.error('[Save] write failed:', err); }
+}
+function resetSaveData() {
+  localStorage.removeItem(SAVE_KEY);
+  save = structuredClone(DEFAULT_SAVE);
+  applySettingsToUI();
+  renderStartStats();
+}
+
+/* ---------------- STUB HOOKS ---------------- */
+function showRewardedAd(placement) {
+  // TODO: real ad SDK call (e.g. AdMob rewarded). Resolve true/false on watched/skipped.
+  console.log(`[Ads] requesting rewarded ad for "${placement}"`);
+  return new Promise((resolve) => setTimeout(() => resolve(true), 700));
+}
+function showInterstitialAd(placement) {
+  // TODO: real AdMob interstitial call. Frequency is deliberately low at
+  // easy difficulty / low playtime and ramps up via currentAdThreshold().
+  console.log(`[Ads] requesting interstitial for "${placement}"`);
+  return new Promise((resolve) => setTimeout(() => resolve(true), 400));
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+const LEADERBOARD_GAME_ID = 'sudoku';
+function submitLeaderboardScore(score) {
+  const name = (save.playerName && save.playerName.trim()) ? save.playerName.trim().slice(0, 20) : 'ANON';
+  if (window.LeaderboardClient) return window.LeaderboardClient.submit(LEADERBOARD_GAME_ID, score, name);
+  console.log('[Leaderboard] stub submit (no shared client loaded):', score, name);
+  return Promise.resolve(true);
+}
+function fetchLeaderboardTop(n = 10) {
+  if (window.LeaderboardClient) return window.LeaderboardClient.fetchTop(LEADERBOARD_GAME_ID, n);
+  return Promise.resolve([]);
+}
+function awardCredits(amount) {
+  save.credits += amount;
+  save.stats.creditsEarnedLifetime += amount;
+  saveGame();
+}
+
+/* ---------------- COSMETICS ---------------- */
+const THEMES = [
+  { id: 'classic', name: 'Classic Green', digit: '#66ff66', highlight: 'rgba(102,255,102,0.16)', cost: 0, source: 'default' },
+  { id: 'cyber',   name: 'Cyber Pink',    digit: '#ff2fd4', highlight: 'rgba(255,47,212,0.16)',  cost: 0, source: 'achv_flawless' },
+  { id: 'grinder', name: 'Daily Grinder', digit: '#ffffff', highlight: 'rgba(255,255,255,0.16)', cost: 0, source: 'achv_dailystreak3' },
+  { id: 'ice',     name: 'Ice',           digit: '#8fdcff', highlight: 'rgba(143,220,255,0.16)', cost: 60,  source: 'shop' },
+  { id: 'matrix',  name: 'Matrix',        digit: '#00ff41', highlight: 'rgba(0,255,65,0.16)',    cost: 90,  source: 'shop' },
+  { id: 'gold',    name: 'Gold Rush',     digit: '#ffd24d', highlight: 'rgba(255,210,77,0.16)',  cost: 120, source: 'shop' },
+  { id: 'void',    name: 'Void',          digit: '#9d4dff', highlight: 'rgba(157,77,255,0.16)',  cost: 180, source: 'shop' },
+];
+
+/* ---------------- ACHIEVEMENTS (15) ---------------- */
+const ACHIEVEMENTS = [
+  { id: 'first_solve',   name: 'First Solve',     desc: 'Solve your first puzzle.',                reward: null,       check: (s) => s.stats.puzzlesSolved >= 1 },
+  { id: 'easy_clear',    name: 'Warm Up',          desc: 'Solve an Easy puzzle.',                    reward: null,       check: (s, r) => r.outcome === 'solved' && r.difficulty === 'easy' },
+  { id: 'medium_clear',  name: 'Getting Sharper',  desc: 'Solve a Medium puzzle.',                   reward: null,       check: (s, r) => r.outcome === 'solved' && r.difficulty === 'medium' },
+  { id: 'hard_clear',    name: 'Grid Locked In',   desc: 'Solve a Hard puzzle.',                      reward: null,       check: (s, r) => r.outcome === 'solved' && r.difficulty === 'hard' },
+  { id: 'expert_clear',  name: 'Logic Master',     desc: 'Solve an Expert puzzle.',                   reward: null,       check: (s, r) => r.outcome === 'solved' && r.difficulty === 'expert' },
+  { id: 'flawless',      name: 'Flawless',         desc: 'Solve a puzzle with zero mistakes.',        reward: 'cyber',    check: (s, r) => r.outcome === 'solved' && r.mistakes === 0 },
+  { id: 'no_hints',      name: 'All Me',           desc: 'Solve a puzzle without using a hint.',      reward: null,       check: (s, r) => r.outcome === 'solved' && r.hintsUsed === 0 },
+  { id: 'speed_demon',   name: 'Speed Demon',      desc: 'Solve in under half the par time.',         reward: null,       check: (s, r) => r.outcome === 'solved' && r.elapsedMs <= r.parMs * 0.5 },
+  { id: 'solver10',      name: 'Regular',          desc: 'Solve 10 puzzles (lifetime).',              reward: null,       check: (s) => s.stats.puzzlesSolved >= 10 },
+  { id: 'solver50',      name: 'Devoted',          desc: 'Solve 50 puzzles (lifetime).',              reward: null,       check: (s) => s.stats.puzzlesSolved >= 50 },
+  { id: 'perfectionist', name: 'Perfectionist',    desc: 'Get 3 flawless clears (lifetime).',         reward: null,       check: (s) => s.stats.flawlessClears >= 3 },
+  { id: 'marathon',      name: 'Marathoner',       desc: 'Accumulate 1 hour of play (lifetime).',     reward: null,       check: (s) => s.stats.totalPlaytimeMs >= 3600000 },
+  { id: 'dailygrinder',  name: 'Daily Grinder',    desc: 'Complete a Daily Challenge.',                reward: null,       check: (s) => s.stats.dailyCompletions >= 1 },
+  { id: 'dailystreak3',  name: 'Creature of Habit',desc: 'Reach a 3-day Daily Challenge streak.',     reward: 'grinder',  check: (s) => s.daily.streak >= 3 },
+  { id: 'rich300',       name: 'Rich',             desc: 'Earn 300 credits (lifetime).',              reward: null,       check: (s) => s.stats.creditsEarnedLifetime >= 300 },
+];
+
+function unlockAchievement(id) {
+  const def = ACHIEVEMENTS.find(a => a.id === id);
+  if (!def || save.achievements[id]) return null;
+  save.achievements[id] = true;
+  if (def.reward && !save.unlocked.themes.includes(def.reward)) save.unlocked.themes.push(def.reward);
+  playSound('achievement');
+  return def;
+}
+function checkAchievements(runCtx) {
+  const newly = [];
+  for (const a of ACHIEVEMENTS) {
+    if (save.achievements[a.id]) continue;
+    if (a.check(save, runCtx)) { const def = unlockAchievement(a.id); if (def) newly.push(def); }
+  }
+  if (newly.length) saveGame();
+  return newly;
+}
+
+/* ---------------- DETERMINISTIC RNG (daily challenge) ---------------- */
+function hashStringToInt(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  return (h ^ (h >>> 16)) >>> 0;
+}
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+let rand = Math.random;
+
+/* =====================================================
+   AUDIO SYSTEM — identical approach to the rest of the family:
+   generative tones + procedural chiptune music constrained to
+   musical scales and gentle volumes, no fixed audio files.
+   ===================================================== */
+const AUDIO_MASTER = 0.15;
+const MUSIC_VOLUME = 0.04;
+const SFX_VOLUME = 0.12;
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function tone(freq, duration, volume, type = 'square') {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume * AUDIO_MASTER, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+
+function playSound(name) {
+  if (!save.settings.sound) return;
+  switch (name) {
+    case 'button': tone(600, .05, SFX_VOLUME); break;
+    case 'select': tone(320, .04, SFX_VOLUME); break;
+    case 'correct': tone(700, .1, SFX_VOLUME, 'triangle'); setTimeout(() => tone(1050, .1, SFX_VOLUME, 'triangle'), 70); break;
+    case 'mistake': tone(140, .18, SFX_VOLUME, 'sawtooth'); break;
+    case 'erase': tone(260, .06, SFX_VOLUME); break;
+    case 'hint': tone(500, .08, SFX_VOLUME, 'triangle'); setTimeout(() => tone(750, .08, SFX_VOLUME, 'triangle'), 60); break;
+    case 'streak': tone(900, .1, SFX_VOLUME, 'triangle'); setTimeout(() => tone(1200, .12, SFX_VOLUME, 'triangle'), 80); break;
+    case 'victory':
+      tone(523, .12, SFX_VOLUME, 'triangle');
+      setTimeout(() => tone(659, .12, SFX_VOLUME, 'triangle'), 120);
+      setTimeout(() => tone(784, .18, SFX_VOLUME, 'triangle'), 240);
+      break;
+    case 'gameover': tone(200, .3, SFX_VOLUME, 'sawtooth'); setTimeout(() => tone(100, .5, SFX_VOLUME, 'sawtooth'), 250); break;
+    case 'achievement':
+      tone(700, .1, SFX_VOLUME, 'triangle');
+      setTimeout(() => tone(1000, .1, SFX_VOLUME, 'triangle'), 90);
+      setTimeout(() => tone(1300, .15, SFX_VOLUME, 'triangle'), 180);
+      break;
+    case 'purchase': tone(500, .08, SFX_VOLUME, 'square'); setTimeout(() => tone(800, .1, SFX_VOLUME, 'square'), 70); break;
+  }
+}
+
+let musicTimer = null, musicPlaying = false, currentScaleNotes = null;
+const SCALE_PATTERNS = { major: [0, 2, 4, 5, 7, 9, 11], naturalMinor: [0, 2, 3, 5, 7, 8, 10], minorPentatonic: [0, 3, 5, 7, 10] };
+const ROOT_FREQUENCIES = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88];
+function generateScaleNotes(rootFreq, pattern) {
+  const notes = [];
+  for (let oct = 0; oct < 2; oct++) for (const semi of pattern) notes.push(rootFreq * Math.pow(2, (oct * 12 + semi) / 12));
+  return notes;
+}
+function initializeMusic() {
+  const root = ROOT_FREQUENCIES[Math.floor(Math.random() * ROOT_FREQUENCIES.length)];
+  const names = Object.keys(SCALE_PATTERNS);
+  const pattern = SCALE_PATTERNS[names[Math.floor(Math.random() * names.length)]];
+  currentScaleNotes = generateScaleNotes(root, pattern);
+}
+function startMusic() {
+  if (musicPlaying) return;
+  musicPlaying = true;
+  initializeMusic();
+  let beat = 0;
+  musicTimer = setInterval(() => {
+    if (state !== 'playing') return;
+    if (Math.random() < 0.7) tone(currentScaleNotes[Math.floor(Math.random() * currentScaleNotes.length)], .14, MUSIC_VOLUME, 'square');
+    if (beat % 4 === 0) tone(currentScaleNotes[Math.floor(Math.random() * 3)] / 2, .25, MUSIC_VOLUME, 'triangle');
+    beat++;
+  }, 60000 / 90 / 2);
+}
+function stopMusic() {
+  musicPlaying = false;
+  if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+}
+
+/* =====================================================
+   SUDOKU GENERATION
+   ===================================================== */
+function emptyGrid() { return Array.from({ length: 9 }, () => Array(9).fill(0)); }
+function isValid(grid, row, col, val) {
+  for (let i = 0; i < 9; i++) { if (grid[row][i] === val) return false; if (grid[i][col] === val) return false; }
+  const br = Math.floor(row / 3) * 3, bc = Math.floor(col / 3) * 3;
+  for (let r = br; r < br + 3; r++) for (let c = bc; c < bc + 3; c++) if (grid[r][c] === val) return false;
+  return true;
+}
+function shuffle(arr, rngFn) {
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rngFn() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+function fillGrid(grid, rngFn) {
+  for (let pos = 0; pos < 81; pos++) {
+    const row = Math.floor(pos / 9), col = pos % 9;
+    if (grid[row][col] !== 0) continue;
+    const nums = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9], rngFn);
+    for (const n of nums) {
+      if (isValid(grid, row, col, n)) {
+        grid[row][col] = n;
+        if (fillGrid(grid, rngFn)) return true;
+        grid[row][col] = 0;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+// NOTE: clue removal is count-based, not uniqueness-verified — a common,
+// cheap simplification for casual sudoku apps. Good enough here; a strict
+// unique-solution guarantee would need a solution-counting solver per removal.
+function generatePuzzle(clueCount, rngFn) {
+  const solution = emptyGrid();
+  fillGrid(solution, rngFn);
+  const puzzle = solution.map(r => r.slice());
+  const positions = shuffle([...Array(81).keys()], rngFn);
+  let removed = 0;
+  const toRemove = 81 - clueCount;
+  for (const pos of positions) {
+    if (removed >= toRemove) break;
+    const row = Math.floor(pos / 9), col = pos % 9;
+    if (puzzle[row][col] !== 0) { puzzle[row][col] = 0; removed++; }
+  }
+  return { puzzle, solution };
+}
+
+const DIFFICULTIES = {
+  easy:   { label: 'EASY',   clues: 42, parSeconds: 240, adThreshold: 6 },
+  medium: { label: 'MEDIUM', clues: 34, parSeconds: 360, adThreshold: 4 },
+  hard:   { label: 'HARD',   clues: 28, parSeconds: 540, adThreshold: 3 },
+  expert: { label: 'EXPERT', clues: 23, parSeconds: 780, adThreshold: 2 },
+};
+const MAX_MISTAKES = 3;
+
+/* =====================================================
+   CORE GAME STATE
+   ===================================================== */
+const canvas = document.getElementById('boardCanvas');
+const ctx = canvas.getContext('2d');
+const CELL = 34;
+canvas.width = CELL * 9;
+canvas.height = CELL * 9;
+
+let state = 'start';        // 'start' | 'playing' | 'paused' | 'over'
+let overPhase = null;       // 'revive' | 'final'
+let menuScreen = 'start';
+let dailyModeActive = false;
+let currentDifficulty = 'easy';
+let runOutcome = null;      // 'solved' | 'failed'
+
+let solution, userGrid, givenMask;
+let selectedRow = null, selectedCol = null;
+let mistakes = 0, hintsUsed = 0, score = 0, streak = 0;
+let particles = [], cellFlashes = [];
+let flashColor = null, flashAlpha = 0;
+let startTime = 0, pausedAt = 0, lastFrame = 0;
+let runFinalized = false, adUsedThisRun = false, doubleCreditsUsed = false;
+let lastCreditsEarned = 0;
+
+const overlay = document.getElementById('overlay');
+const hudScore = document.getElementById('hudScore');
+const hudTimer = document.getElementById('hudTimer');
+const chipMistakes = document.getElementById('chipMistakes');
+const chipHints = document.getElementById('chipHints');
+const chipDifficulty = document.getElementById('chipDifficulty');
+
+function currentTheme() { return THEMES.find(t => t.id === save.equippedTheme) || THEMES[0]; }
+function formatTime(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(s / 60), r = s % 60;
+  return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+}
+function currentAdThreshold() {
+  let t = DIFFICULTIES[currentDifficulty].adThreshold;
+  const hours = save.stats.totalPlaytimeMs / 3600000;
+  if (hours > 2) t = Math.max(1, t - 2);
+  else if (hours > 0.5) t = Math.max(1, t - 1);
+  return t;
+}
+
+function spawnPopup(row, col, text, color) { particles.push({ row, col, text, color, life: 650, maxLife: 650 }); }
+function triggerFlash(color) { flashColor = color; flashAlpha = 0.225; }
+
+function updateHud() {
+  hudScore.textContent = `SCORE ${score}`;
+  chipMistakes.textContent = `MISTAKES ${mistakes}/${MAX_MISTAKES}`;
+  chipHints.textContent = `HINTS ${hintsUsed}`;
+  chipDifficulty.textContent = DIFFICULTIES[currentDifficulty].label;
+}
+
+function startPuzzle(difficultyKey, daily) {
+  dailyModeActive = !!daily;
+  currentDifficulty = dailyModeActive ? 'medium' : difficultyKey;
+  rand = dailyModeActive ? mulberry32(hashStringToInt('sudoku-' + todayStr())) : Math.random;
+
+  const diff = DIFFICULTIES[currentDifficulty];
+  const gen = generatePuzzle(diff.clues, rand);
+  solution = gen.solution;
+  userGrid = gen.puzzle.map(r => r.slice());
+  givenMask = gen.puzzle.map(r => r.map(v => v !== 0));
+
+  selectedRow = null; selectedCol = null;
+  mistakes = 0; hintsUsed = 0; score = 0; streak = 0;
+  particles = []; cellFlashes = []; flashColor = null; flashAlpha = 0;
+  runFinalized = false; adUsedThisRun = false; doubleCreditsUsed = false; runOutcome = null;
+
+  startTime = performance.now(); lastFrame = performance.now();
+  state = 'playing'; overPhase = null;
+  startMusic();
+  updateHud();
+  renderOverlay();
+}
+
+function selectCell(row, col) {
+  if (state !== 'playing') return;
+  selectedRow = row; selectedCol = col;
+  playSound('select');
+}
+
+function inputDigit(n) {
+  if (state !== 'playing' || selectedRow === null || givenMask[selectedRow][selectedCol]) return;
+  if (n === 0) { userGrid[selectedRow][selectedCol] = 0; playSound('erase'); return; }
+
+  userGrid[selectedRow][selectedCol] = n;
+  const correct = n === solution[selectedRow][selectedCol];
+  if (correct) {
+    streak += 1;
+    let gain = 10;
+    if (streak > 0 && streak % 5 === 0) { gain += 15; spawnPopup(selectedRow, selectedCol, 'STREAK+', '#ffd24d'); playSound('streak'); }
+    score += gain;
+    spawnPopup(selectedRow, selectedCol, `+${gain}`, currentTheme().digit);
+    playSound('correct');
+    if (checkComplete()) return;
+  } else {
+    mistakes += 1; streak = 0;
+    score = Math.max(0, score - 5);
+    save.stats.totalMistakes += 1;
+    cellFlashes.push({ row: selectedRow, col: selectedCol, color: '#ff2222', life: 500, maxLife: 500 });
+    triggerFlash('#ff2222');
+    spawnPopup(selectedRow, selectedCol, 'X', '#ff5555');
+    playSound('mistake');
+    if (mistakes >= MAX_MISTAKES) { triggerFail(); return; }
+  }
+  updateHud();
+}
+
+function useHint() {
+  if (state !== 'playing' || selectedRow === null) return;
+  if (givenMask[selectedRow][selectedCol]) return;
+  if (userGrid[selectedRow][selectedCol] === solution[selectedRow][selectedCol]) return;
+  userGrid[selectedRow][selectedCol] = solution[selectedRow][selectedCol];
+  hintsUsed += 1;
+  save.stats.totalHintsUsed += 1;
+  score = Math.max(0, score - 5);
+  spawnPopup(selectedRow, selectedCol, 'HINT', '#55ddff');
+  playSound('hint');
+  updateHud();
+  checkComplete();
+}
+
+function checkComplete() {
+  for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (userGrid[r][c] !== solution[r][c]) return false;
+  victory();
+  return true;
+}
+
+function victory() {
+  state = 'over'; runOutcome = 'solved';
+  stopMusic();
+  playSound('victory');
+  finalizeRun();
+}
+
+function triggerFail() {
+  state = 'over'; runOutcome = 'failed';
+  stopMusic();
+  playSound('gameover');
+  if (!adUsedThisRun) {
+    overPhase = 'revive';
+    document.getElementById('crashScore').textContent = `SCORE: ${score}`;
+  } else {
+    finalizeRun();
+  }
+  renderOverlay();
+}
+
+async function onWatchAdRevive() {
+  const granted = await showRewardedAd('continue');
+  if (granted) {
+    adUsedThisRun = true;
+    mistakes = MAX_MISTAKES - 1;
+    state = 'playing'; overPhase = null;
+    triggerFlash('#33ff33');
+    startMusic();
+    updateHud();
+    renderOverlay();
+  }
+}
+
+function finalizeRun() {
+  if (runFinalized) return;
+  runFinalized = true;
+  const elapsedMs = performance.now() - startTime;
+  const diff = DIFFICULTIES[currentDifficulty];
+  lastCreditsEarned = Math.floor(score / 20);
+
+  const priorHigh = save.highScore;
+  save.stats.totalPlaytimeMs += elapsedMs;
+  save.credits += lastCreditsEarned;
+  save.stats.creditsEarnedLifetime += lastCreditsEarned;
+  save.highScore = Math.max(save.highScore, score);
+
+  if (runOutcome === 'solved') {
+    save.stats.puzzlesSolved += 1;
+    if (mistakes === 0) save.stats.flawlessClears += 1;
+    const bt = save.stats.bestTimeMs[currentDifficulty];
+    if (bt == null || elapsedMs < bt) save.stats.bestTimeMs[currentDifficulty] = elapsedMs;
+
+    if (dailyModeActive) {
+      const today = todayStr();
+      if (save.daily.lastSolvedDate !== today) {
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        save.daily.streak = (save.daily.lastSolvedDate === yesterday) ? save.daily.streak + 1 : 1;
+        save.daily.lastSolvedDate = today;
+        save.stats.dailyCompletions += 1;
+      }
+      save.daily.date = today; save.daily.played = true; save.daily.solved = true;
+      save.daily.bestScore = Math.max(save.daily.bestScore, score);
+    }
+  } else {
+    save.stats.puzzlesFailed += 1;
+    if (dailyModeActive) { save.daily.date = todayStr(); save.daily.played = true; save.daily.solved = false; }
+  }
+
+  const runCtx = { outcome: runOutcome, difficulty: currentDifficulty, mistakes, hintsUsed, elapsedMs, parMs: diff.parSeconds * 1000, score };
+  const newlyUnlocked = checkAchievements(runCtx);
+
+  // Ad frequency: starts light, ramps with difficulty and cumulative playtime.
+  // Only rolled on a successful solve — failing already has its own ad offer.
+  if (runOutcome === 'solved') {
+    save.adState.puzzlesSinceInterstitial = (save.adState.puzzlesSinceInterstitial || 0) + 1;
+    if (save.adState.puzzlesSinceInterstitial >= currentAdThreshold()) {
+      save.adState.puzzlesSinceInterstitial = 0;
+      showInterstitialAd('puzzle_complete');
+    }
+  }
+  saveGame();
+
+  overPhase = 'final';
+  renderFinalScreen(newlyUnlocked, elapsedMs, diff, priorHigh);
+  renderOverlay();
+  attemptLeaderboardSubmit();
+}
+
+async function attemptLeaderboardSubmit() {
+  const statusEl = document.getElementById('leaderboardStatus');
+  const btn = document.getElementById('submitScoreBtn');
+  btn.disabled = true;
+  if (!window.LeaderboardClient) {
+    statusEl.style.color = '#ff8888';
+    statusEl.textContent = 'Leaderboard offline — this file needs to be served over http(s) (a local server, or GitHub Pages), not opened directly as a file:// page. Browsers block the leaderboard script from loading that way.';
+    btn.disabled = false;
+    return;
+  }
+  statusEl.style.color = '#6fcf6f';
+  statusEl.textContent = 'Submitting...';
+  const ok = await submitLeaderboardScore(score);
+  if (ok) {
+    statusEl.style.color = '#66ff66';
+    statusEl.textContent = `✓ Submitted as ${(save.playerName && save.playerName.trim()) || 'ANON'}`;
+  } else {
+    statusEl.style.color = '#ff8888';
+    statusEl.textContent = '✗ Submission failed — check the browser console for details.';
+    btn.disabled = false;
+  }
+}
+
+async function onDoubleCredits() {
+  if (doubleCreditsUsed || lastCreditsEarned <= 0) return;
+  const granted = await showRewardedAd('double_credits');
+  if (granted) {
+    doubleCreditsUsed = true;
+    awardCredits(lastCreditsEarned);
+    document.getElementById('doubleCreditsBtn').textContent = 'CREDITS DOUBLED ✓';
+    document.getElementById('doubleCreditsBtn').disabled = true;
+    renderStartStats();
+  }
+}
+
+function endToMenu() {
+  state = 'start'; menuScreen = 'start'; overPhase = null;
+  renderStartStats();
+  renderOverlay();
+}
+
+/* ---------------- pause ---------------- */
+function pauseGame() {
+  if (state !== 'playing') return;
+  pausedAt = performance.now();
+  state = 'paused';
+  renderOverlay();
+}
+function resumeGame() {
+  if (state !== 'paused') return;
+  startTime += performance.now() - pausedAt;
+  state = 'playing';
+  lastFrame = performance.now();
+  renderOverlay();
+}
+
+/* ---------------- update / render ---------------- */
+function update(dt) {
+  for (const p of particles) p.life -= dt;
+  particles = particles.filter(p => p.life > 0);
+  for (const f of cellFlashes) f.life -= dt;
+  cellFlashes = cellFlashes.filter(f => f.life > 0);
+  if (flashAlpha > 0) flashAlpha = Math.max(0, flashAlpha - dt * 0.0025);
+  if (state === 'playing') hudTimer.textContent = formatTime(performance.now() - startTime);
+}
+
+function draw() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const theme = currentTheme();
+
+  if (state !== 'start' && selectedRow !== null) {
+    const selVal = userGrid[selectedRow][selectedCol];
+    if (selVal) {
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (userGrid[r][c] === selVal) ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+    }
+    ctx.fillStyle = theme.highlight;
+    for (let i = 0; i < 9; i++) { ctx.fillRect(i * CELL, selectedRow * CELL, CELL, CELL); ctx.fillRect(selectedCol * CELL, i * CELL, CELL, CELL); }
+    const br = Math.floor(selectedRow / 3) * 3, bc = Math.floor(selectedCol / 3) * 3;
+    ctx.fillRect(bc * CELL, br * CELL, CELL * 3, CELL * 3);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(selectedCol * CELL, selectedRow * CELL, CELL, CELL);
+  }
+
+  for (const f of cellFlashes) {
+    ctx.globalAlpha = Math.max(0, f.life / f.maxLife) * 0.5;
+    ctx.fillStyle = f.color;
+    ctx.fillRect(f.col * CELL, f.row * CELL, CELL, CELL);
+    ctx.globalAlpha = 1;
+  }
+
+  for (let i = 0; i <= 9; i++) {
+    ctx.strokeStyle = '#1f8f1f';
+    ctx.lineWidth = (i % 3 === 0) ? 2 : 1;
+    ctx.beginPath(); ctx.moveTo(i * CELL, 0); ctx.lineTo(i * CELL, 9 * CELL); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i * CELL); ctx.lineTo(9 * CELL, i * CELL); ctx.stroke();
+  }
+
+  if (userGrid) {
+    ctx.font = `${CELL - 8}px 'Courier New', monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
+      const v = userGrid[r][c];
+      if (v === 0) continue;
+      ctx.fillStyle = givenMask[r][c] ? '#4fae4f' : theme.digit;
+      ctx.fillText(String(v), c * CELL + CELL / 2, r * CELL + CELL / 2 + 1);
+    }
+  }
+
+  ctx.font = `12px 'Courier New', monospace`;
+  ctx.textBaseline = 'top';
+  for (const p of particles) {
+    const t = 1 - p.life / p.maxLife;
+    const py = p.row * CELL + CELL / 2 - t * 20 - 6;
+    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.text, p.col * CELL + CELL / 2, py);
+    ctx.globalAlpha = 1;
+  }
+  ctx.textAlign = 'left';
+
+  if (flashAlpha > 0 && flashColor) {
+    ctx.globalAlpha = flashAlpha;
+    ctx.fillStyle = flashColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function loop(t) {
+  const dt = t - lastFrame;
+  lastFrame = t;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+canvas.addEventListener('click', (ev) => {
+  if (state !== 'playing') return;
+  const rect = canvas.getBoundingClientRect();
+  // The canvas is square (canvas.width === canvas.height) but its CSS box
+  // (rect) isn't always square — it uses object-fit:contain, so the actual
+  // grid is letterboxed (centered) inside rect on non-square boxes, e.g. a
+  // wide/tall desktop window. Since the canvas background is black like the
+  // page, that letterboxing is invisible, so we have to account for it here
+  // or clicks land on the wrong cell.
+  const renderSize = Math.min(rect.width, rect.height);
+  const offsetX = rect.left + (rect.width - renderSize) / 2;
+  const offsetY = rect.top + (rect.height - renderSize) / 2;
+  const scale = canvas.width / renderSize;
+  const x = (ev.clientX - offsetX) * scale, y = (ev.clientY - offsetY) * scale;
+  const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
+  if (row >= 0 && row < 9 && col >= 0 && col < 9) selectCell(row, col);
+});
+
+window.addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (k >= '1' && k <= '9') inputDigit(parseInt(k, 10));
+  else if (k === 'Backspace' || k === 'Delete' || k === '0') inputDigit(0);
+  else if (k.toLowerCase() === 'h') useHint();
+  else if (k.toLowerCase() === 'p' || k === 'Escape') { if (state === 'playing') pauseGame(); else if (state === 'paused') resumeGame(); }
+  else if (selectedRow !== null) {
+    if (k === 'ArrowUp') selectCell(Math.max(0, selectedRow - 1), selectedCol);
+    else if (k === 'ArrowDown') selectCell(Math.min(8, selectedRow + 1), selectedCol);
+    else if (k === 'ArrowLeft') selectCell(selectedRow, Math.max(0, selectedCol - 1));
+    else if (k === 'ArrowRight') selectCell(selectedRow, Math.min(8, selectedCol + 1));
+  }
+});
+
+/* =========================================================================
+   UI / SCREEN MANAGEMENT
+   ========================================================================= */
+function showScreen(name) {
+  menuScreen = name;
+  renderOverlay();
+  if (name === 'shop') renderShop();
+  if (name === 'achv') renderAchievements();
+  if (name === 'settings') renderSettingsScreen();
+  if (name === 'leaderboard') renderLeaderboardScreen();
+  if (name === 'start') renderStartStats();
+}
+
+function renderOverlay() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  if (state === 'playing') { overlay.style.display = 'none'; return; }
+  overlay.style.display = 'flex';
+  let show;
+  if (state === 'paused') show = 'paused';
+  else if (state === 'over' && overPhase === 'revive') show = 'crash';
+  else if (state === 'over' && overPhase === 'final') show = 'final';
+  else show = menuScreen;
+  const el = document.getElementById('scr-' + show);
+  if (el) el.classList.add('active');
+}
+
+function renderStartStats() {
+  const s = save;
+  const achvCount = Object.keys(s.achievements).length;
+  const bt = s.stats.bestTimeMs;
+  const fmt = (ms) => ms == null ? '--:--' : formatTime(ms);
+  const dailyNote = (s.daily.date === todayStr() && s.daily.played)
+    ? `Today: ${s.daily.solved ? 'solved ✓' : 'attempted'} &mdash; streak ${s.daily.streak}`
+    : `Not played today &mdash; streak ${s.daily.streak}`;
+  document.getElementById('startStats').innerHTML =
+    `HIGH SCORE: ${s.highScore} &nbsp;|&nbsp; CREDITS: ${s.credits}<br>` +
+    `ACHIEVEMENTS: ${achvCount}/${ACHIEVEMENTS.length} &nbsp;|&nbsp; SOLVED: ${s.stats.puzzlesSolved}<br>` +
+    `BEST TIMES &mdash; E:${fmt(bt.easy)} M:${fmt(bt.medium)} H:${fmt(bt.hard)} X:${fmt(bt.expert)}<br>` +
+    `<span style="color:#cc66ff;">DAILY: ${dailyNote}</span>`;
+}
+
+function renderShop() {
+  document.getElementById('shopCredits').textContent = `CREDITS: ${save.credits}`;
+  document.getElementById('shopList').innerHTML = THEMES.map(th => {
+    const owned = save.unlocked.themes.includes(th.id);
+    const equipped = save.equippedTheme === th.id;
+    let action;
+    if (equipped) action = `<button class="btn small" disabled>EQUIPPED</button>`;
+    else if (owned) action = `<button class="btn small" onclick="equipTheme('${th.id}')">EQUIP</button>`;
+    else if (th.source === 'shop') action = `<button class="btn small" ${save.credits < th.cost ? 'disabled' : ''} onclick="buyTheme('${th.id}')">BUY ${th.cost}c</button>`;
+    else action = `<button class="btn small" disabled>LOCKED</button>`;
+    return `<div class="listItem ${owned ? '' : 'locked'}">
+      <span class="swatch" style="color:${th.digit}">■</span>
+      <span style="flex:1;">${th.name}<br><span class="meta">${th.source === 'shop' ? 'Shop item' : (owned ? 'Achievement reward' : 'Unlock via achievement')}</span></span>
+      ${action}
+    </div>`;
+  }).join('');
+}
+function buyTheme(id) {
+  const th = THEMES.find(t => t.id === id);
+  if (!th || th.cost <= 0 || save.unlocked.themes.includes(id) || save.credits < th.cost) return;
+  save.credits -= th.cost;
+  save.stats.creditsSpent += th.cost;
+  save.unlocked.themes.push(id);
+  playSound('purchase');
+  saveGame();
+  renderShop();
+}
+function equipTheme(id) {
+  if (!save.unlocked.themes.includes(id)) return;
+  save.equippedTheme = id;
+  saveGame();
+  renderShop();
+}
+
+function renderAchievements() {
+  const count = Object.keys(save.achievements).length;
+  document.getElementById('achvProgress').textContent = `${count} / ${ACHIEVEMENTS.length} UNLOCKED`;
+  document.getElementById('achvList').innerHTML = ACHIEVEMENTS.map(a => {
+    const done = !!save.achievements[a.id];
+    return `<div class="listItem ${done ? '' : 'locked'}">
+      <span style="width:16px;">${done ? '★' : '☆'}</span>
+      <span style="flex:1;">${a.name}<br><span class="meta">${a.desc}</span></span>
+    </div>`;
+  }).join('');
+}
+
+function applySettingsToUI() {
+  document.getElementById('soundToggleBtn').textContent = `SOUND: ${save.settings.sound ? 'ON' : 'OFF'}`;
+  document.getElementById('pauseSoundBtn').textContent = `SOUND: ${save.settings.sound ? 'ON' : 'OFF'}`;
+  document.getElementById('crtToggleBtn').textContent = `CRT FX: ${save.settings.crt ? 'ON' : 'OFF'}`;
+  document.getElementById('scan').style.display = save.settings.crt ? 'block' : 'none';
+}
+function renderSettingsScreen() { applySettingsToUI(); }
+function toggleSound() { save.settings.sound = !save.settings.sound; saveGame(); applySettingsToUI(); }
+function toggleCrt() { save.settings.crt = !save.settings.crt; saveGame(); applySettingsToUI(); }
+
+function renderLeaderboardScreen() {
+  document.getElementById('leaderboardBody').innerHTML =
+    `Your high score: <b>${save.highScore}</b><br><br>Loading global scores...`;
+  fetchLeaderboardTop(10).then(rows => {
+    const list = rows.length
+      ? rows.map((r, i) => `${i + 1}. ${escapeHtml(r.name || 'ANON')} — ${r.score}`).join('<br>')
+      : 'No scores yet — be the first.';
+    document.getElementById('leaderboardBody').innerHTML =
+      `Your high score: <b>${save.highScore}</b><br><br>${list}`;
+  });
+}
+
+function renderFinalScreen(newlyUnlocked, elapsedMs, diff, priorHigh) {
+  const solved = runOutcome === 'solved';
+  document.getElementById('finalTitle').textContent = solved ? '> PUZZLE_SOLVED' : '> RUN_TERMINATED';
+  const banner = document.getElementById('finalBanner');
+  if (solved && save.highScore > priorHigh) {
+    banner.style.display = 'block'; banner.style.color = '#ffd24d'; banner.textContent = '*** NEW HIGH SCORE ***';
+  } else if (solved) {
+    banner.style.display = 'block'; banner.style.color = '#66ff66'; banner.textContent = '*** SOLVED ***';
+  } else {
+    banner.style.display = 'none';
+  }
+  document.getElementById('finalStats').innerHTML =
+    `SCORE: ${score}<br>TIME: ${formatTime(elapsedMs)} (par ${formatTime(diff.parSeconds * 1000)})<br>` +
+    `MISTAKES: ${mistakes}/${MAX_MISTAKES} &nbsp;|&nbsp; HINTS USED: ${hintsUsed}<br>CREDITS EARNED: +${lastCreditsEarned}`;
+  const toastWrap = document.getElementById('finalAchvWrap');
+  toastWrap.innerHTML = newlyUnlocked.length
+    ? '<h2>ACHIEVEMENTS UNLOCKED</h2>' + newlyUnlocked.map(a => `<div class="achvToast">★ ${a.name}</div>`).join('')
+    : '';
+  document.getElementById('doubleCreditsBtn').disabled = lastCreditsEarned <= 0;
+  document.getElementById('doubleCreditsBtn').textContent = '▶ WATCH AD: DOUBLE CREDITS';
+}
+
+/* =========================================================================
+   INPUT WIRING
+   ========================================================================= */
+document.querySelectorAll('.numBtn[data-n]').forEach(btn => {
+  btn.addEventListener('click', () => { playSound('button'); inputDigit(parseInt(btn.dataset.n, 10)); });
+});
+document.getElementById('eraseBtn').addEventListener('click', () => { playSound('button'); inputDigit(0); });
+document.getElementById('hintBtn').addEventListener('click', () => { playSound('button'); useHint(); });
+document.getElementById('pauseBtn').addEventListener('click', () => { playSound('button'); pauseGame(); });
+document.getElementById('pauseBtn2').addEventListener('click', () => { playSound('button'); pauseGame(); });
+document.getElementById('resumeBtn').addEventListener('click', () => { playSound('button'); resumeGame(); startMusic(); });
+document.getElementById('quitBtn').addEventListener('click', () => { playSound('button'); runOutcome = runOutcome || 'failed'; finalizeRun(); overPhase = 'final'; renderOverlay(); });
+document.getElementById('pauseSoundBtn').addEventListener('click', () => { playSound('button'); toggleSound(); });
+
+document.getElementById('easyBtn').addEventListener('click', () => { playSound('button'); startPuzzle('easy', false); });
+document.getElementById('mediumBtn').addEventListener('click', () => { playSound('button'); startPuzzle('medium', false); });
+document.getElementById('hardBtn').addEventListener('click', () => { playSound('button'); startPuzzle('hard', false); });
+document.getElementById('expertBtn').addEventListener('click', () => { playSound('button'); startPuzzle('expert', false); });
+document.getElementById('dailyBtn').addEventListener('click', () => { playSound('button'); startPuzzle(null, true); });
+
+document.getElementById('shopBtn').addEventListener('click', () => { playSound('button'); showScreen('shop'); });
+document.getElementById('achvBtn').addEventListener('click', () => { playSound('button'); showScreen('achv'); });
+document.getElementById('howtoBtn').addEventListener('click', () => { playSound('button'); showScreen('howto'); });
+document.getElementById('settingsBtn').addEventListener('click', () => { playSound('button'); showScreen('settings'); });
+document.getElementById('leaderboardBtn').addEventListener('click', () => { playSound('button'); showScreen('leaderboard'); });
+
+document.getElementById('soundToggleBtn').addEventListener('click', () => { playSound('button'); toggleSound(); });
+document.getElementById('crtToggleBtn').addEventListener('click', () => { playSound('button'); toggleCrt(); });
+document.getElementById('resetSaveBtn').addEventListener('click', () => {
+  playSound('button');
+  if (confirm('Erase all saved progress? This cannot be undone.')) { resetSaveData(); alert('Save data cleared.'); }
+});
+
+document.getElementById('watchAdBtn').addEventListener('click', () => { playSound('button'); onWatchAdRevive(); });
+document.getElementById('noThanksBtn').addEventListener('click', () => { playSound('button'); finalizeRun(); });
+document.getElementById('doubleCreditsBtn').addEventListener('click', () => { playSound('button'); onDoubleCredits(); });
+document.getElementById('submitScoreBtn').addEventListener('click', () => { playSound('button'); attemptLeaderboardSubmit(); });
+document.getElementById('newPuzzleBtn').addEventListener('click', () => { playSound('button'); endToMenu(); });
+
+/* =========================================================================
+   BOOT
+   ========================================================================= */
+loadGame();
+applySettingsToUI();
+renderStartStats();
+const playerNameInput = document.getElementById('playerNameInput');
+playerNameInput.value = save.playerName || '';
+playerNameInput.addEventListener('change', () => {
+  save.playerName = playerNameInput.value.trim().slice(0, 20);
+  saveGame();
+});
+updateHud();
+renderOverlay();
+draw();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

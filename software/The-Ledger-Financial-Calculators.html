@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ledger — Accounting &amp; Finance Calculators</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9EBDF;
+  --paper-line:#d3d7c4;
+  --panel:#F8F9F2;
+  --panel-border:#c9cdb8;
+  --ink:#1F2E23;
+  --ink-soft:#51604F;
+  --ink-faint:#8b9484;
+  --accent:#A9762F;
+  --accent-soft:#E4D4B0;
+  --stamp:#8E3B3B;
+  --stamp-soft:#f1dcd6;
+  --sidebar:#16231B;
+  --sidebar-text:#CBD4C2;
+  --sidebar-text-dim:#7C8B77;
+  --good:#3E6B4C;
+  --radius:3px;
+  --serif:'Fraunces',Georgia,serif;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--sans);
+  color:var(--ink);
+  background:var(--paper);
+  background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 34px, var(--paper-line) 35px);
+  min-height:100vh;
+  display:flex;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  width:248px;
+  flex:0 0 248px;
+  background:var(--sidebar);
+  color:var(--sidebar-text);
+  min-height:100vh;
+  position:sticky;
+  top:0;
+  align-self:flex-start;
+  display:flex;
+  flex-direction:column;
+  padding:28px 0 20px;
+}
+.brand{
+  padding:0 22px 20px;
+  border-bottom:1px solid #2b382c;
+  margin-bottom:10px;
+}
+.brand .mark{
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:26px;
+  letter-spacing:0.02em;
+  color:#F3EFE2;
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+}
+.brand .mark sup{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--accent);
+  font-weight:600;
+}
+.brand .tagline{
+  font-size:11.5px;
+  color:var(--sidebar-text-dim);
+  margin-top:6px;
+  line-height:1.5;
+  letter-spacing:0.01em;
+}
+nav.tabs{
+  flex:1;
+  overflow-y:auto;
+  padding:8px 0 8px;
+}
+nav.tabs .group-label{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--sidebar-text-dim);
+  padding:16px 22px 6px;
+}
+nav.tabs button{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  text-align:left;
+  background:none;
+  border:none;
+  color:var(--sidebar-text);
+  font-family:var(--sans);
+  font-size:13.5px;
+  padding:9px 22px;
+  cursor:pointer;
+  border-left:3px solid transparent;
+  transition:background .12s ease, border-color .12s ease, color .12s ease;
+}
+nav.tabs button .idx{
+  font-family:var(--mono);
+  font-size:10.5px;
+  color:var(--sidebar-text-dim);
+  min-width:20px;
+}
+nav.tabs button:hover{ background:#1e2c22; color:#F3EFE2; }
+nav.tabs button.active{
+  background:#22301F;
+  border-left-color:var(--accent);
+  color:#F3EFE2;
+  font-weight:600;
+}
+nav.tabs button.active .idx{ color:var(--accent); }
+.sidebar-foot{
+  padding:14px 22px 0;
+  border-top:1px solid #2b382c;
+  font-size:10.5px;
+  color:var(--sidebar-text-dim);
+  line-height:1.6;
+}
+
+/* ---------- Main ---------- */
+main{ flex:1; min-width:0; padding:40px 52px 90px; max-width:980px; }
+.page-head{ margin-bottom:6px; }
+.page-head .eyebrow{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 8px;
+}
+.page-head h1{
+  font-family:var(--serif);
+  font-size:34px;
+  font-weight:600;
+  margin:0 0 10px;
+  color:var(--ink);
+}
+.page-head p.desc{
+  font-size:14.5px;
+  color:var(--ink-soft);
+  max-width:640px;
+  line-height:1.6;
+  margin:0 0 30px;
+}
+.tab-section{ display:none; }
+.tab-section.active{ display:block; }
+
+.cards{ display:flex; flex-direction:column; gap:22px; }
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius);
+  position:relative;
+  padding:22px 26px 24px;
+  box-shadow:0 1px 0 rgba(0,0,0,.03);
+}
+.card::before{
+  content:attr(data-num);
+  position:absolute;
+  top:0; right:0;
+  font-family:var(--mono);
+  font-size:10.5px;
+  color:var(--ink-faint);
+  background:var(--accent-soft);
+  padding:3px 9px;
+  border-bottom-left-radius:var(--radius);
+  letter-spacing:.04em;
+}
+.card h3{
+  font-family:var(--serif);
+  font-size:19px;
+  font-weight:600;
+  margin:0 0 4px;
+  padding-right:60px;
+}
+.card p.card-desc{
+  font-size:13px;
+  color:var(--ink-soft);
+  margin:0 0 6px;
+  line-height:1.55;
+}
+.card .formula{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--accent);
+  background:#fff;
+  border:1px dashed var(--panel-border);
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:2px;
+  margin-bottom:16px;
+}
+
+.field-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  margin-bottom:14px;
+}
+.field-row{
+  display:grid;
+  grid-template-columns:26px 1fr 168px;
+  align-items:center;
+  gap:12px;
+  padding:6px 8px;
+  border-radius:2px;
+  transition:background .12s ease;
+}
+.field-row.is-target{ background:var(--stamp-soft); }
+.field-row label.field-label{
+  font-size:13.5px;
+  color:var(--ink);
+  cursor:pointer;
+}
+.field-row .field-label .unit-hint{
+  color:var(--ink-faint);
+  font-size:11.5px;
+  margin-left:4px;
+}
+.radio-wrap{ display:flex; align-items:center; justify-content:center; }
+.radio-wrap input[type=radio]{
+  appearance:none;
+  width:15px; height:15px;
+  border:1.5px solid var(--ink-faint);
+  border-radius:50%;
+  cursor:pointer;
+  position:relative;
+  margin:0;
+  background:#fff;
+}
+.radio-wrap input[type=radio]:checked{
+  border-color:var(--stamp);
+}
+.radio-wrap input[type=radio]:checked::after{
+  content:'';
+  position:absolute;
+  top:3px; left:3px;
+  width:6px; height:6px;
+  border-radius:50%;
+  background:var(--stamp);
+}
+.input-wrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.input-wrap .affix{
+  font-family:var(--mono);
+  font-size:12.5px;
+  color:var(--ink-faint);
+  position:absolute;
+  pointer-events:none;
+}
+.input-wrap .affix.prefix{ left:9px; }
+.input-wrap .affix.suffix{ right:9px; }
+.field-row input[type=text]{
+  width:100%;
+  font-family:var(--mono);
+  font-size:13.5px;
+  padding:7px 9px;
+  border:1px solid var(--panel-border);
+  border-radius:2px;
+  background:#fff;
+  color:var(--ink);
+}
+.field-row input[type=text].has-prefix{ padding-left:20px; }
+.field-row input[type=text].has-suffix{ padding-right:24px; }
+.field-row input[type=text]:disabled{
+  background:var(--stamp-soft);
+  border-color:#dcb9b0;
+  color:var(--stamp);
+  font-weight:600;
+}
+.field-row input[type=text]:focus{
+  outline:none;
+  border-color:var(--ink-soft);
+}
+
+.card-foot{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:4px;
+  flex-wrap:wrap;
+}
+button.solve-btn{
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:13px;
+  background:var(--ink);
+  color:#F3EFE2;
+  border:none;
+  padding:9px 18px;
+  border-radius:2px;
+  cursor:pointer;
+  letter-spacing:.01em;
+}
+button.solve-btn:hover{ background:#2c3e2e; }
+button.reset-btn{
+  font-family:var(--sans);
+  font-size:12px;
+  background:none;
+  border:1px solid var(--panel-border);
+  color:var(--ink-soft);
+  padding:8px 14px;
+  border-radius:2px;
+  cursor:pointer;
+}
+button.reset-btn:hover{ border-color:var(--ink-soft); color:var(--ink); }
+
+.result-stamp{
+  font-family:var(--mono);
+  font-size:13px;
+  padding:5px 12px;
+  border:1.5px solid var(--good);
+  color:var(--good);
+  border-radius:2px;
+  transform:rotate(-1deg);
+  display:none;
+}
+.result-stamp.show{ display:inline-block; }
+.result-stamp.error{ border-color:var(--stamp); color:var(--stamp); }
+
+.note{
+  font-size:11.5px;
+  color:var(--ink-faint);
+  margin-top:10px;
+  line-height:1.5;
+}
+
+/* dynamic row tables (cash flow streams, DCF) */
+.row-table{ width:100%; border-collapse:collapse; margin-bottom:12px; }
+.row-table th{
+  font-family:var(--mono);
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--ink-faint);
+  text-align:left;
+  padding:4px 8px;
+  border-bottom:1px solid var(--panel-border);
+}
+.row-table td{ padding:4px 8px; }
+.row-table input[type=text]{
+  width:100%;
+  font-family:var(--mono);
+  font-size:13px;
+  padding:6px 8px;
+  border:1px solid var(--panel-border);
+  border-radius:2px;
+  background:#fff;
+}
+.row-table td.readout{
+  font-family:var(--mono);
+  font-size:13px;
+  color:var(--ink-soft);
+}
+.row-table button.rm-row{
+  background:none;border:none;color:var(--stamp);cursor:pointer;font-size:14px;
+}
+.small-btn{
+  font-family:var(--sans);
+  font-size:11.5px;
+  background:none;
+  border:1px dashed var(--panel-border);
+  color:var(--ink-soft);
+  padding:5px 10px;
+  border-radius:2px;
+  cursor:pointer;
+}
+.summary-line{
+  display:flex;
+  justify-content:space-between;
+  font-family:var(--mono);
+  font-size:13px;
+  padding:6px 8px;
+  border-top:1px solid var(--panel-border);
+}
+.summary-line.total{ font-weight:600; color:var(--ink); border-top:1.5px solid var(--ink); margin-top:2px; }
+
+.new-badge{
+  font-family:var(--mono);
+  font-size:9.5px;
+  letter-spacing:.08em;
+  background:var(--accent);
+  color:#fff;
+  padding:2px 6px;
+  border-radius:2px;
+  vertical-align:middle;
+  margin-left:8px;
+}
+
+::-webkit-scrollbar{ width:10px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:#3a4a3b; border-radius:5px; }
+
+@media (max-width: 860px){
+  body{ flex-direction:column; }
+  .sidebar{ width:100%; flex:0 0 auto; position:relative; min-height:auto; }
+  main{ padding:28px 20px 60px; }
+  .field-row{ grid-template-columns:22px 1fr; }
+  .field-row .input-wrap{ grid-column:1 / -1; margin-left:34px; width:calc(100% - 34px); }
+}
+
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="brand">
+    <div class="mark">The Ledger</div>
+    <div class="tagline">Solve for whatever you don't know. Fill in what you do, pick the blank, and let the formula run backward.</div>
+  </div>
+  <nav class="tabs" id="nav-tabs"></nav>
+  <div class="sidebar-foot">Every calculator solves for any one unknown value — fill in the rest and hit Solve.</div>
+</div>
+<main id="main-content"></main>
+
+<script>
+/* =========================================================================
+   THE LEDGER — engine
+   ========================================================================= */
+
+function bisect(f, lo, hi, iters, tol){
+  iters = iters || 200; tol = tol || 1e-10;
+  let flo = f(lo), fhi = f(hi);
+  if (isNaN(flo) || isNaN(fhi)) throw new Error('No solution for these inputs.');
+  if (flo === 0) return lo;
+  if (fhi === 0) return hi;
+  if ((flo < 0) === (fhi < 0)) throw new Error('No solution found in the expected range — double check the other values.');
+  for (let i = 0; i < iters; i++){
+    const mid = (lo + hi) / 2, fm = f(mid);
+    if (Math.abs(fm) < tol || (hi - lo) < 1e-13) return mid;
+    if ((flo < 0) === (fm < 0)) { lo = mid; flo = fm; } else { hi = mid; }
+  }
+  return (lo + hi) / 2;
+}
+
+/* standard TVM equation (ordinary annuity, end-of-period payments):
+   PV*(1+i)^n + PMT*((1+i)^n - 1)/i + FV = 0                              */
+function tvmResidual(i, n, pv, pmt, fv){
+  if (Math.abs(i) < 1e-12) return pv + pmt * n + fv;
+  const x = Math.pow(1 + i, n);
+  return pv * x + pmt * (x - 1) / i + fv;
+}
+function tvmSolvePV(n, i, pmt, fv){
+  if (Math.abs(i) < 1e-12) return -(fv + pmt * n);
+  const x = Math.pow(1 + i, n);
+  return -(fv + pmt * (x - 1) / i) / x;
+}
+function tvmSolveFV(n, i, pv, pmt){
+  if (Math.abs(i) < 1e-12) return -(pv + pmt * n);
+  const x = Math.pow(1 + i, n);
+  return -(pv * x + pmt * (x - 1) / i);
+}
+function tvmSolvePMT(n, i, pv, fv){
+  if (Math.abs(i) < 1e-12) return -(pv + fv) / n;
+  const x = Math.pow(1 + i, n);
+  return -(pv * x + fv) * i / (x - 1);
+}
+function tvmSolveN(i, pv, pmt, fv){
+  if (Math.abs(i) < 1e-12) return -(pv + fv) / pmt;
+  const num = (pmt / i - fv);
+  const den = (pv + pmt / i);
+  const x = num / den;
+  if (x <= 0) throw new Error('No real solution — check the signs/magnitudes of your cash flows.');
+  return Math.log(x) / Math.log(1 + i);
+}
+function tvmSolveI(n, pv, pmt, fv){
+  return bisect(i => tvmResidual(i, n, pv, pmt, fv), -0.9999, 10, 400);
+}
+
+function bondPriceCalc(couponPmt, periodicY, n, fv){
+  if (Math.abs(periodicY) < 1e-12) return couponPmt * n + fv;
+  return couponPmt * (1 - Math.pow(1 + periodicY, -n)) / periodicY + fv / Math.pow(1 + periodicY, n);
+}
+
+/* =========================================================================
+   Formatting helpers
+   ========================================================================= */
+function round(v, dp){ const f = Math.pow(10, dp); return Math.round((v + Number.EPSILON) * f) / f; }
+
+function displayValue(field, internal){
+  if (internal === null || internal === undefined || isNaN(internal)) return '';
+  if (field.percent) return String(round(internal * 100, 6));
+  if (field.round !== undefined) return String(round(internal, field.round));
+  return String(round(internal, 6));
+}
+function parseValue(field, raw){
+  if (raw === '' || raw === null || raw === undefined) return NaN;
+  let v = parseFloat(String(raw).replace(/,/g, ''));
+  if (isNaN(v)) return NaN;
+  if (field.percent) v = v / 100;
+  return v;
+}
+function fmtResult(field, internal){
+  if (internal === null || internal === undefined || isNaN(internal)) return '—';
+  if (field.percent) return round(internal * 100, 4).toLocaleString(undefined,{maximumFractionDigits:4}) + '%';
+  if (field.currency) return '$' + internal.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+  const dp = field.round === undefined ? 4 : field.round;
+  return round(internal, dp).toLocaleString(undefined,{maximumFractionDigits:dp}) + (field.suffixLabel ? ' ' + field.suffixLabel : '');
+}
+
+/* =========================================================================
+   Generic algebraic-card builder
+   ========================================================================= */
+let cardCounter = 0;
+
+function buildAlgebraicCard(cfg){
+  cardCounter++;
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.setAttribute('data-num', String(cardCounter).padStart(3,'0'));
+
+  const h3 = document.createElement('h3');
+  h3.textContent = cfg.title;
+  if (cfg.isNew) { const b = document.createElement('span'); b.className='new-badge'; b.textContent='NEW'; h3.appendChild(b); }
+  card.appendChild(h3);
+
+  if (cfg.desc){
+    const p = document.createElement('p'); p.className = 'card-desc'; p.textContent = cfg.desc;
+    card.appendChild(p);
+  }
+  if (cfg.formula){
+    const f = document.createElement('div'); f.className = 'formula'; f.textContent = cfg.formula;
+    card.appendChild(f);
+  }
+
+  const grid = document.createElement('div'); grid.className = 'field-grid';
+  const uid = 'c' + cardCounter;
+
+  cfg.fields.forEach((field, i) => {
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    row.setAttribute('data-key', field.key);
+    if ((cfg.defaultTarget || cfg.fields[0].key) === field.key) row.classList.add('is-target');
+
+    const radioWrap = document.createElement('div'); radioWrap.className = 'radio-wrap';
+    const radio = document.createElement('input');
+    radio.type = 'radio'; radio.name = uid + '-target'; radio.value = field.key;
+    radio.id = uid + '-r-' + field.key;
+    if ((cfg.defaultTarget || cfg.fields[0].key) === field.key) radio.checked = true;
+    radioWrap.appendChild(radio);
+
+    const label = document.createElement('label');
+    label.className = 'field-label'; label.setAttribute('for', radio.id);
+    label.innerHTML = field.label + (field.hint ? '<span class="unit-hint">' + field.hint + '</span>' : '');
+
+    const inputWrap = document.createElement('div'); inputWrap.className = 'input-wrap';
+    if (field.currency){ const pre = document.createElement('span'); pre.className='affix prefix'; pre.textContent='$'; inputWrap.appendChild(pre); }
+    const input = document.createElement('input');
+    input.type = 'text'; input.autocomplete='off'; input.spellcheck=false;
+    input.setAttribute('data-field', field.key);
+    input.className = field.currency ? 'has-prefix' : '';
+    if (field.percent) input.className += ' has-suffix';
+    if (field.default !== undefined) input.value = displayValue(field, field.default);
+    inputWrap.appendChild(input);
+    if (field.percent){ const suf = document.createElement('span'); suf.className='affix suffix'; suf.textContent='%'; inputWrap.appendChild(suf); }
+
+    row.appendChild(radioWrap); row.appendChild(label); row.appendChild(inputWrap);
+    grid.appendChild(row);
+
+    radio.addEventListener('change', () => {
+      grid.querySelectorAll('.field-row').forEach(r => r.classList.remove('is-target'));
+      row.classList.add('is-target');
+      grid.querySelectorAll('input[data-field]').forEach(inp => inp.disabled = false);
+      input.value = '';
+      input.disabled = true;
+      stamp.classList.remove('show');
+    });
+  });
+  card.appendChild(grid);
+
+  // disable the default target field
+  const initialTargetKey = cfg.defaultTarget || cfg.fields[0].key;
+  const initialInput = grid.querySelector('[data-field="'+initialTargetKey+'"]');
+  if (initialInput) initialInput.disabled = true;
+
+  const foot = document.createElement('div'); foot.className = 'card-foot';
+  const solveBtn = document.createElement('button'); solveBtn.className='solve-btn'; solveBtn.textContent='Solve';
+  const resetBtn = document.createElement('button'); resetBtn.className='reset-btn'; resetBtn.textContent='Reset';
+  const stamp = document.createElement('span'); stamp.className = 'result-stamp';
+  foot.appendChild(solveBtn); foot.appendChild(resetBtn); foot.appendChild(stamp);
+  card.appendChild(foot);
+
+  if (cfg.note){
+    const n = document.createElement('div'); n.className='note'; n.textContent = cfg.note;
+    card.appendChild(n);
+  }
+
+  function fieldByKey(k){ return cfg.fields.find(f => f.key === k); }
+
+  solveBtn.addEventListener('click', () => {
+    const target = grid.querySelector('input[name="'+uid+'-target"]:checked').value;
+    const values = {};
+    let missingLabel = null;
+    for (const f of cfg.fields){
+      if (f.key === target) continue;
+      const inp = grid.querySelector('[data-field="'+f.key+'"]');
+      const v = parseValue(f, inp.value);
+      if (isNaN(v)) { missingLabel = f.label; break; }
+      values[f.key] = v;
+    }
+    if (missingLabel){
+      stamp.textContent = 'Fill in "' + missingLabel + '" first';
+      stamp.classList.add('show','error');
+      return;
+    }
+    try {
+      const result = cfg.solvers[target](values);
+      if (result === null || result === undefined || isNaN(result)) throw new Error('No solution for these inputs.');
+      const tf = fieldByKey(target);
+      const inp = grid.querySelector('[data-field="'+target+'"]');
+      inp.value = displayValue(tf, result);
+      stamp.textContent = tf.label + ' = ' + fmtResult(tf, result);
+      stamp.classList.remove('error');
+      stamp.classList.add('show');
+    } catch (e){
+      stamp.textContent = e.message || 'Could not solve — check your inputs.';
+      stamp.classList.add('show','error');
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    cfg.fields.forEach(f => {
+      const inp = grid.querySelector('[data-field="'+f.key+'"]');
+      inp.value = (f.default !== undefined && f.key !== initialTargetKey) ? displayValue(f, f.default) : '';
+    });
+    stamp.classList.remove('show');
+  });
+
+  return card;
+}
+
+/* =========================================================================
+   Custom card: Present / Future Value of a Cash Flow Stream
+   ========================================================================= */
+function buildCashFlowStreamCard(){
+  cardCounter++;
+  const card = document.createElement('div');
+  card.className = 'card'; card.setAttribute('data-num', String(cardCounter).padStart(3,'0'));
+  card.innerHTML = `
+    <h3>Present &amp; Future Value of a Cash Flow Stream</h3>
+    <p class="card-desc">Enter a series of end-of-year cash flows and a discount rate to find the value of the whole stream today (PV) or at the final year shown (FV).</p>
+    <div class="formula">PV = Σ CFₜ ÷ (1+r)ᵗ &nbsp;·&nbsp; FV = Σ CFₜ × (1+r)^(N−t)</div>
+    <table class="row-table">
+      <thead><tr><th style="width:70px">Year</th><th>Cash Flow ($)</th><th style="width:130px">PV Today ($)</th><th style="width:36px"></th></tr></thead>
+      <tbody id="cfs-body"></tbody>
+    </table>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="small-btn" id="cfs-add">+ add year</button>
+      <div class="field-row" style="grid-template-columns:1fr 168px;flex:1;min-width:220px;">
+        <label class="field-label">Discount / interest rate<span class="unit-hint">per year</span></label>
+        <div class="input-wrap"><input type="text" id="cfs-rate" value="10" class="has-suffix"><span class="affix suffix">%</span></div>
+      </div>
+    </div>
+    <div class="summary-line"><span>Present Value of stream</span><span id="cfs-pv" class="readout">—</span></div>
+    <div class="summary-line total"><span>Future Value of stream (at final year)</span><span id="cfs-fv" class="readout">—</span></div>
+    <div class="note">Tip: if you know the total PV you want but are missing one year's cash flow, leave that year's box empty, click "Solve for blank year," and the calculator will back it out for you.</div>
+    <div class="card-foot" style="margin-top:14px;">
+      <button class="solve-btn" id="cfs-calc">Calculate</button>
+      <button class="reset-btn" id="cfs-solveblank">Solve for blank year</button>
+      <span class="result-stamp" id="cfs-stamp"></span>
+    </div>
+  `;
+  const body = card.querySelector('#cfs-body');
+  let rowCount = 0;
+  function addRow(defaultVal){
+    rowCount++;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="readout">${rowCount}</td>
+      <td><input type="text" data-cf value="${defaultVal !== undefined ? defaultVal : ''}"></td>
+      <td class="readout" data-pv>—</td>
+      <td><button class="rm-row" title="remove year">✕</button></td>`;
+    tr.querySelector('.rm-row').addEventListener('click', () => { tr.remove(); renumber(); });
+    body.appendChild(tr);
+  }
+  function renumber(){
+    let n = 0;
+    body.querySelectorAll('tr').forEach(tr => { n++; tr.querySelector('.readout').textContent = n; });
+    rowCount = n;
+  }
+  [8,19,30,41,52].forEach(addRow);
+  card.querySelector('#cfs-add').addEventListener('click', () => addRow());
+
+  const stamp = card.querySelector('#cfs-stamp');
+
+  card.querySelector('#cfs-calc').addEventListener('click', () => {
+    const rate = parseValue({percent:true}, card.querySelector('#cfs-rate').value);
+    if (isNaN(rate)) { stamp.textContent = 'Enter a rate first'; stamp.className='result-stamp show error'; return; }
+    const rows = Array.from(body.querySelectorAll('tr'));
+    const N = rows.length;
+    let pvSum = 0, ok = true;
+    rows.forEach((tr, idx) => {
+      const t = idx + 1;
+      const cfInput = tr.querySelector('[data-cf]');
+      const cf = parseFloat(cfInput.value);
+      const pvCell = tr.querySelector('[data-pv]');
+      if (isNaN(cf)) { pvCell.textContent = '—'; ok = false; return; }
+      const pv = cf / Math.pow(1 + rate, t);
+      pvCell.textContent = '$' + pv.toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:2});
+      pvSum += pv;
+    });
+    if (!ok){ stamp.textContent = 'Fill in every year (or use "solve for blank year")'; stamp.className='result-stamp show error'; return; }
+    const fvSum = pvSum * Math.pow(1 + rate, N);
+    card.querySelector('#cfs-pv').textContent = '$' + pvSum.toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:2});
+    card.querySelector('#cfs-fv').textContent = '$' + fvSum.toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:2});
+    stamp.className = 'result-stamp show';
+    stamp.textContent = 'Done';
+  });
+
+  card.querySelector('#cfs-solveblank').addEventListener('click', () => {
+    const rate = parseValue({percent:true}, card.querySelector('#cfs-rate').value);
+    const targetPV = parseFloat(card.querySelector('#cfs-pv').textContent.replace(/[^0-9.\-]/g,''));
+    if (isNaN(rate)){ stamp.textContent='Enter a rate first'; stamp.className='result-stamp show error'; return; }
+    const rows = Array.from(body.querySelectorAll('tr'));
+    let blankIdx = -1, knownPV = 0;
+    rows.forEach((tr, idx) => {
+      const v = tr.querySelector('[data-cf]').value;
+      if (v === '' ) { blankIdx = idx; return; }
+      const cf = parseFloat(v);
+      if (!isNaN(cf)) knownPV += cf / Math.pow(1+rate, idx+1);
+    });
+    if (blankIdx === -1){ stamp.textContent='No blank year to solve for'; stamp.className='result-stamp show error'; return; }
+    if (isNaN(targetPV)){ stamp.textContent='Enter the target PV in the input first, then click Calculate once with a placeholder, or type a PV value into the PV readout is not editable — set all known years and a desired total will use Calculate result'; stamp.className='result-stamp show error'; return; }
+    const t = blankIdx + 1;
+    const neededPV = targetPV - knownPV;
+    const cf = neededPV * Math.pow(1+rate, t);
+    rows[blankIdx].querySelector('[data-cf]').value = round(cf,2);
+    stamp.textContent = 'Year ' + t + ' cash flow = $' + cf.toLocaleString(undefined,{maximumFractionDigits:2});
+    stamp.className = 'result-stamp show';
+    card.querySelector('#cfs-calc').click();
+  });
+
+  return card;
+}
+
+/* =========================================================================
+   Custom card: Bond Price from Spot Rates
+   ========================================================================= */
+function buildSpotRateBondCard(){
+  cardCounter++;
+  const card = document.createElement('div');
+  card.className = 'card'; card.setAttribute('data-num', String(cardCounter).padStart(3,'0'));
+  card.innerHTML = `
+    <h3>Bond Price from Spot Rates</h3>
+    <p class="card-desc">Price a bond by discounting each individual cash flow at its own spot (zero) rate for that period — more precise than using a single YTM for every payment.</p>
+    <div class="formula">Price = Σ CFₜ ÷ (1 + spotₜ)^t</div>
+    <table class="row-table">
+      <thead><tr><th style="width:110px">Period (t)</th><th style="width:130px">Spot Rate (%)</th><th>Cash Flow ($)</th><th style="width:130px">PV ($)</th><th style="width:36px"></th></tr></thead>
+      <tbody id="sr-body"></tbody>
+    </table>
+    <button class="small-btn" id="sr-add">+ add period</button>
+    <div class="summary-line total"><span>Bond Price (sum of PVs)</span><span id="sr-total" class="readout">—</span></div>
+    <div class="card-foot" style="margin-top:14px;">
+      <button class="solve-btn" id="sr-calc">Calculate Price</button>
+      <span class="result-stamp" id="sr-stamp"></span>
+    </div>
+    <div class="note">Example: a 3-period semiannual bond with coupon $20 in periods 1–2 and a final $1,020 (coupon + face) in period 3.</div>
+  `;
+  const body = card.querySelector('#sr-body');
+  function addRow(t, spot, cf){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><input type="text" data-t value="${t !== undefined ? t : ''}"></td>
+      <td><input type="text" data-spot value="${spot !== undefined ? spot : ''}"></td>
+      <td><input type="text" data-cf value="${cf !== undefined ? cf : ''}"></td>
+      <td class="readout" data-pv>—</td>
+      <td><button class="rm-row" title="remove">✕</button></td>`;
+    tr.querySelector('.rm-row').addEventListener('click', () => tr.remove());
+    body.appendChild(tr);
+  }
+  addRow(1, 1.0, 20); addRow(2, 1.1, 20); addRow(3, 1.3, 1020);
+  card.querySelector('#sr-add').addEventListener('click', () => addRow());
+  const stamp = card.querySelector('#sr-stamp');
+  card.querySelector('#sr-calc').addEventListener('click', () => {
+    const rows = Array.from(body.querySelectorAll('tr'));
+    let total = 0, ok = true;
+    rows.forEach(tr => {
+      const t = parseFloat(tr.querySelector('[data-t]').value);
+      const spot = parseFloat(tr.querySelector('[data-spot]').value) / 100;
+      const cf = parseFloat(tr.querySelector('[data-cf]').value);
+      const pvCell = tr.querySelector('[data-pv]');
+      if (isNaN(t) || isNaN(spot) || isNaN(cf)) { pvCell.textContent = '—'; ok = false; return; }
+      const pv = cf / Math.pow(1 + spot, t);
+      pvCell.textContent = '$' + pv.toLocaleString(undefined,{maximumFractionDigits:2});
+      total += pv;
+    });
+    if (!ok){ stamp.textContent = 'Fill in every row'; stamp.className = 'result-stamp show error'; return; }
+    card.querySelector('#sr-total').textContent = '$' + total.toLocaleString(undefined,{maximumFractionDigits:2});
+    stamp.textContent = 'Price = $' + total.toLocaleString(undefined,{maximumFractionDigits:2});
+    stamp.className = 'result-stamp show';
+  });
+  return card;
+}
+
+/* =========================================================================
+   Custom card: Multi-Year DCF + Terminal Value -> Enterprise/Equity Value
+   ========================================================================= */
+function buildDCFCard(){
+  cardCounter++;
+  const card = document.createElement('div');
+  card.className = 'card'; card.setAttribute('data-num', String(cardCounter).padStart(3,'0'));
+  card.innerHTML = `
+    <h3>Multi-Year DCF — Enterprise &amp; Equity Value</h3>
+    <p class="card-desc">Project free cash flow for several years, discount each to today, add a Gordon-growth terminal value for everything after, and (optionally) bridge from Enterprise Value to a per-share price.</p>
+    <div class="formula">EV = Σ FCFₜ/(1+WACC)ᵗ + [FCF_N×(1+g)/(WACC−g)] ÷ (1+WACC)ᴺ</div>
+    <table class="row-table">
+      <thead><tr><th style="width:70px">Year</th><th>Free Cash Flow ($)</th><th style="width:150px">PV ($)</th><th style="width:36px"></th></tr></thead>
+      <tbody id="dcf-body"></tbody>
+    </table>
+    <button class="small-btn" id="dcf-add">+ add year</button>
+    <div class="field-grid" style="margin-top:14px;">
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Discount rate (WACC)</label>
+        <div class="input-wrap"><input type="text" id="dcf-wacc" value="10" class="has-suffix"><span class="affix suffix">%</span></div>
+      </div>
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Terminal growth rate</label>
+        <div class="input-wrap"><input type="text" id="dcf-g" value="3" class="has-suffix"><span class="affix suffix">%</span></div>
+      </div>
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Cash <span class="unit-hint">(optional, for equity bridge)</span></label>
+        <div class="input-wrap"><span class="affix prefix">$</span><input type="text" id="dcf-cash" class="has-prefix" value="0"></div>
+      </div>
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Debt <span class="unit-hint">(optional)</span></label>
+        <div class="input-wrap"><span class="affix prefix">$</span><input type="text" id="dcf-debt" class="has-prefix" value="0"></div>
+      </div>
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Shares outstanding <span class="unit-hint">(optional)</span></label>
+        <div class="input-wrap"><input type="text" id="dcf-shares" value="0"></div>
+      </div>
+    </div>
+    <div class="summary-line"><span>Sum of PV(FCF), years shown</span><span id="dcf-sumpv" class="readout">—</span></div>
+    <div class="summary-line"><span>Terminal Value (undiscounted, as of final year)</span><span id="dcf-tv" class="readout">—</span></div>
+    <div class="summary-line"><span>PV of Terminal Value</span><span id="dcf-pvtv" class="readout">—</span></div>
+    <div class="summary-line total"><span>Enterprise Value</span><span id="dcf-ev" class="readout">—</span></div>
+    <div class="summary-line"><span>Equity Value (EV + Cash − Debt)</span><span id="dcf-eq" class="readout">—</span></div>
+    <div class="summary-line"><span>Implied Share Price</span><span id="dcf-px" class="readout">—</span></div>
+    <div class="card-foot" style="margin-top:14px;">
+      <button class="solve-btn" id="dcf-calc">Calculate</button>
+      <span class="result-stamp" id="dcf-stamp"></span>
+    </div>
+  `;
+  const body = card.querySelector('#dcf-body');
+  let n = 0;
+  function addRow(defVal){
+    n++;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="readout">${n}</td><td><input type="text" data-fcf value="${defVal !== undefined ? defVal : ''}"></td><td class="readout" data-pv>—</td><td><button class="rm-row">✕</button></td>`;
+    tr.querySelector('.rm-row').addEventListener('click', () => { tr.remove(); renumber(); });
+    body.appendChild(tr);
+  }
+  function renumber(){ let i=0; body.querySelectorAll('tr').forEach(tr=>{ i++; tr.querySelector('.readout').textContent=i; }); n=i; }
+  [53,68,78,75,82].forEach(addRow);
+  card.querySelector('#dcf-add').addEventListener('click', () => addRow());
+
+  const stamp = card.querySelector('#dcf-stamp');
+  card.querySelector('#dcf-calc').addEventListener('click', () => {
+    const wacc = parseFloat(card.querySelector('#dcf-wacc').value) / 100;
+    const g = parseFloat(card.querySelector('#dcf-g').value) / 100;
+    const cash = parseFloat(card.querySelector('#dcf-cash').value) || 0;
+    const debt = parseFloat(card.querySelector('#dcf-debt').value) || 0;
+    const shares = parseFloat(card.querySelector('#dcf-shares').value) || 0;
+    if (isNaN(wacc) || isNaN(g)) { stamp.textContent='Enter WACC and growth rate'; stamp.className='result-stamp show error'; return; }
+    if (wacc <= g){ stamp.textContent='WACC must be greater than the terminal growth rate'; stamp.className='result-stamp show error'; return; }
+    const rows = Array.from(body.querySelectorAll('tr'));
+    const N = rows.length;
+    let sumPV = 0, lastFCF = null, ok = true;
+    rows.forEach((tr, idx) => {
+      const t = idx + 1;
+      const fcf = parseFloat(tr.querySelector('[data-fcf]').value);
+      const pvCell = tr.querySelector('[data-pv]');
+      if (isNaN(fcf)) { pvCell.textContent='—'; ok = false; return; }
+      const pv = fcf / Math.pow(1+wacc, t);
+      pvCell.textContent = '$' + pv.toLocaleString(undefined,{maximumFractionDigits:2});
+      sumPV += pv;
+      lastFCF = fcf;
+    });
+    if (!ok){ stamp.textContent = 'Fill in every year\u2019s FCF'; stamp.className='result-stamp show error'; return; }
+    const tv = lastFCF * (1+g) / (wacc - g);
+    const pvtv = tv / Math.pow(1+wacc, N);
+    const ev = sumPV + pvtv;
+    const eq = ev + cash - debt;
+    card.querySelector('#dcf-sumpv').textContent = '$' + sumPV.toLocaleString(undefined,{maximumFractionDigits:2});
+    card.querySelector('#dcf-tv').textContent = '$' + tv.toLocaleString(undefined,{maximumFractionDigits:2});
+    card.querySelector('#dcf-pvtv').textContent = '$' + pvtv.toLocaleString(undefined,{maximumFractionDigits:2});
+    card.querySelector('#dcf-ev').textContent = '$' + ev.toLocaleString(undefined,{maximumFractionDigits:2});
+    card.querySelector('#dcf-eq').textContent = '$' + eq.toLocaleString(undefined,{maximumFractionDigits:2});
+    card.querySelector('#dcf-px').textContent = shares > 0 ? '$' + (eq/shares).toLocaleString(undefined,{maximumFractionDigits:2}) : '— (enter shares)';
+    stamp.textContent = 'Enterprise Value = $' + ev.toLocaleString(undefined,{maximumFractionDigits:2});
+    stamp.className = 'result-stamp show';
+  });
+  return card;
+}
+
+/* =========================================================================
+   Custom card: Full Amortization Schedule
+   ========================================================================= */
+function buildAmortizationScheduleCard(){
+  cardCounter++;
+  const card = document.createElement('div');
+  card.className = 'card'; card.setAttribute('data-num', String(cardCounter).padStart(3,'0'));
+  card.innerHTML = `
+    <h3>Full Amortization Schedule <span class="new-badge">NEW</span></h3>
+    <p class="card-desc">Enter a loan's terms to see the payment, interest, principal, and remaining balance for every period — plus totals for interest paid over the life of the loan.</p>
+    <div class="field-grid">
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Loan Amount</label>
+        <div class="input-wrap"><span class="affix prefix">$</span><input type="text" id="am-pv" class="has-prefix" value="20000"></div>
+      </div>
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Annual Interest Rate</label>
+        <div class="input-wrap"><input type="text" id="am-rate" class="has-suffix" value="6"><span class="affix suffix">%</span></div>
+      </div>
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Payments per Year</label>
+        <div class="input-wrap"><input type="text" id="am-m" value="12"></div>
+      </div>
+      <div class="field-row" style="grid-template-columns:1fr 168px;">
+        <label class="field-label">Term (years)</label>
+        <div class="input-wrap"><input type="text" id="am-years" value="4"></div>
+      </div>
+    </div>
+    <div class="summary-line"><span>Payment per Period</span><span id="am-payment" class="readout">—</span></div>
+    <div class="summary-line"><span>Total of All Payments</span><span id="am-totalpaid" class="readout">—</span></div>
+    <div class="summary-line total"><span>Total Interest Paid</span><span id="am-totalint" class="readout">—</span></div>
+    <div class="card-foot" style="margin-top:4px;margin-bottom:14px;">
+      <button class="solve-btn" id="am-calc">Generate Schedule</button>
+      <span class="result-stamp" id="am-stamp"></span>
+    </div>
+    <div style="max-height:340px;overflow-y:auto;border:1px solid var(--panel-border);border-radius:2px;">
+      <table class="row-table" style="margin-bottom:0;">
+        <thead style="position:sticky;top:0;background:var(--panel);"><tr><th>#</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead>
+        <tbody id="am-body"></tbody>
+      </table>
+    </div>
+  `;
+  const stamp = card.querySelector('#am-stamp');
+  card.querySelector('#am-calc').addEventListener('click', () => {
+    const pv = parseFloat(card.querySelector('#am-pv').value);
+    const rate = parseFloat(card.querySelector('#am-rate').value) / 100;
+    const m = parseFloat(card.querySelector('#am-m').value);
+    const years = parseFloat(card.querySelector('#am-years').value);
+    if ([pv,rate,m,years].some(v => isNaN(v) || v <= 0)){
+      stamp.textContent = 'Fill in every field with a positive number';
+      stamp.className = 'result-stamp show error';
+      return;
+    }
+    const n = Math.round(m*years);
+    const i = rate/m;
+    const payment = -tvmSolvePMT(n, i, pv, 0);
+    const body = card.querySelector('#am-body');
+    body.innerHTML = '';
+    let balance = pv, totalInt = 0;
+    for (let t=1; t<=n; t++){
+      const interest = balance*i;
+      const principal = payment-interest;
+      balance = balance-principal;
+      if (t===n) balance = 0;
+      totalInt += interest;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="readout">${t}</td><td class="readout">$${payment.toLocaleString(undefined,{maximumFractionDigits:2})}</td><td class="readout">$${interest.toLocaleString(undefined,{maximumFractionDigits:2})}</td><td class="readout">$${principal.toLocaleString(undefined,{maximumFractionDigits:2})}</td><td class="readout">$${balance.toLocaleString(undefined,{maximumFractionDigits:2})}</td>`;
+      body.appendChild(tr);
+    }
+    card.querySelector('#am-payment').textContent = '$' + payment.toLocaleString(undefined,{maximumFractionDigits:2});
+    card.querySelector('#am-totalpaid').textContent = '$' + (payment*n).toLocaleString(undefined,{maximumFractionDigits:2});
+    card.querySelector('#am-totalint').textContent = '$' + totalInt.toLocaleString(undefined,{maximumFractionDigits:2});
+    stamp.textContent = n + ' periods generated';
+    stamp.className = 'result-stamp show';
+  });
+  return card;
+}
+
+/* =========================================================================
+   TAB / CARD CONFIGURATION
+   ========================================================================= */
+const TABS = [
+
+{ id:'tvm', group:'Foundations', label:'Time Value of Money',
+  eyebrow:'Section 01 · Foundations',
+  title:'Time Value of Money',
+  desc:'The building blocks under nearly every other calculator in this ledger: a single sum growing or discounting through time, and the streams of cash flows built from it.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Single Sum — Present &amp; Future Value',
+      desc:'Grow a present amount forward, or discount a future amount back, at a constant rate.',
+      formula:'FV = PV × (1 + r)ⁿ',
+      defaultTarget:'fv',
+      fields:[
+        {key:'pv', label:'Present Value', currency:true},
+        {key:'fv', label:'Future Value', currency:true},
+        {key:'rate', label:'Rate', percent:true, hint:'per period'},
+        {key:'years', label:'Number of Periods', round:4},
+      ],
+      solvers:{
+        fv: v => v.pv * Math.pow(1+v.rate, v.years),
+        pv: v => v.fv / Math.pow(1+v.rate, v.years),
+        rate: v => Math.pow(v.fv / v.pv, 1/v.years) - 1,
+        years: v => Math.log(v.fv / v.pv) / Math.log(1+v.rate),
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Discount Factor',
+      desc:'The present-value weight applied to $1 received n periods from now.',
+      formula:'Discount Factor = 1 ÷ (1 + r)ⁿ',
+      defaultTarget:'factor',
+      fields:[
+        {key:'rate', label:'Rate', percent:true, hint:'per period'},
+        {key:'years', label:'Number of Periods', round:4},
+        {key:'factor', label:'Discount Factor', round:6},
+      ],
+      solvers:{
+        factor: v => 1/Math.pow(1+v.rate, v.years),
+        rate: v => Math.pow(1/v.factor, 1/v.years) - 1,
+        years: v => Math.log(1/v.factor) / Math.log(1+v.rate),
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Nominal (APR) vs. Effective Annual Rate',
+      desc:'Convert between a quoted annual rate and its true effective annual yield under compounding.',
+      formula:'EAR = (1 + APR ÷ m)^m − 1',
+      defaultTarget:'ear',
+      fields:[
+        {key:'apr', label:'Nominal Rate (APR)', percent:true},
+        {key:'m', label:'Compounding Periods / Year', round:4},
+        {key:'ear', label:'Effective Annual Rate (EAR)', percent:true},
+      ],
+      solvers:{
+        ear: v => Math.pow(1+v.apr/v.m, v.m) - 1,
+        apr: v => v.m * (Math.pow(1+v.ear, 1/v.m) - 1),
+        m: v => bisect(m => Math.pow(1+v.apr/m, m) - 1 - v.ear, 1, 5000, 400),
+      },
+      note:'Also used on the Loans tab, where m is usually 12 (monthly compounding).'
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Real vs. Nominal Rate (Fisher Equation)',
+      desc:'Separate a nominal interest rate into its real (purchasing-power) growth and inflation components.',
+      formula:'(1 + real) × (1 + inflation) − 1 = nominal',
+      defaultTarget:'nominal',
+      fields:[
+        {key:'real', label:'Real Rate', percent:true},
+        {key:'inflation', label:'Inflation Rate', percent:true},
+        {key:'nominal', label:'Nominal Rate', percent:true},
+      ],
+      solvers:{
+        nominal: v => (1+v.real)*(1+v.inflation) - 1,
+        real: v => (1+v.nominal)/(1+v.inflation) - 1,
+        inflation: v => (1+v.nominal)/(1+v.real) - 1,
+      }
+    }));
+    host.appendChild(buildCashFlowStreamCard());
+  }
+},
+
+{ id:'loans', group:'Foundations', label:'Loans & Annuities',
+  eyebrow:'Section 02 · Foundations',
+  title:'Loans &amp; Annuities',
+  desc:'A five-key financial calculator for anything with regular payments — loans, savings plans, leases — plus amortization and APR/EAR conversions.',
+  build:(host)=>{
+    cardCounter++;
+    const card = document.createElement('div');
+    card.className='card'; card.setAttribute('data-num', String(cardCounter).padStart(3,'0'));
+    card.innerHTML = `<h3>Universal Loan / Annuity Solver</h3>
+      <p class="card-desc">The same five values a financial calculator uses: Number of periods (N), rate per period (I), Present Value, Payment, and Future Value. Pick the one you don't know. <strong>Sign convention:</strong> money you receive is positive, money you pay out is negative (so on a normal loan, PV is positive and PMT is negative).</p>
+      <div class="formula">PV×(1+i)ⁿ + PMT×[(1+i)ⁿ−1]/i + FV = 0</div>`;
+    const grid = document.createElement('div'); grid.className='field-grid';
+    card.appendChild(grid);
+    const fields = [
+      {key:'n', label:'N — Number of Periods', round:4},
+      {key:'i', label:'I — Rate per Period', percent:true},
+      {key:'pv', label:'PV — Present Value', currency:true},
+      {key:'pmt', label:'PMT — Payment per Period', currency:true},
+      {key:'fv', label:'FV — Future Value', currency:true},
+    ];
+    const uid = 'loan5';
+    fields.forEach((f,idx)=>{
+      const row = document.createElement('div'); row.className='field-row'; row.setAttribute('data-key',f.key);
+      if (f.key==='pmt') row.classList.add('is-target');
+      row.innerHTML = `<div class="radio-wrap"><input type="radio" name="${uid}-target" id="${uid}-r-${f.key}" value="${f.key}" ${f.key==='pmt'?'checked':''}></div>
+        <label class="field-label" for="${uid}-r-${f.key}">${f.label}</label>
+        <div class="input-wrap">${f.currency?'<span class="affix prefix">$</span>':''}<input type="text" data-field="${f.key}" class="${f.currency?'has-prefix':''} ${f.percent?'has-suffix':''}" ${f.key==='pmt'?'disabled':''}>${f.percent?'<span class="affix suffix">%</span>':''}</div>`;
+      grid.appendChild(row);
+      row.querySelector('input[type=radio]').addEventListener('change', ()=>{
+        grid.querySelectorAll('.field-row').forEach(r=>r.classList.remove('is-target'));
+        row.classList.add('is-target');
+        grid.querySelectorAll('input[data-field]').forEach(inp=>inp.disabled=false);
+        const inp = row.querySelector('input[data-field]'); inp.value=''; inp.disabled=true;
+        stamp.classList.remove('show');
+      });
+    });
+    const foot = document.createElement('div'); foot.className='card-foot';
+    const solveBtn=document.createElement('button'); solveBtn.className='solve-btn'; solveBtn.textContent='Solve';
+    const resetBtn=document.createElement('button'); resetBtn.className='reset-btn'; resetBtn.textContent='Reset';
+    const stamp=document.createElement('span'); stamp.className='result-stamp';
+    foot.appendChild(solveBtn); foot.appendChild(resetBtn); foot.appendChild(stamp);
+    card.appendChild(foot);
+    const note=document.createElement('div'); note.className='note';
+    note.textContent='Examples: financing a car (PV = price, PMT = monthly payment, FV = 0) · saving toward a goal (PV = 0, PMT = deposits, FV = goal) · finding how many payments are left (solve N).';
+    card.appendChild(note);
+
+    solveBtn.addEventListener('click', ()=>{
+      const target = grid.querySelector('input[name="'+uid+'-target"]:checked').value;
+      const vals = {};
+      let missing=null;
+      for (const f of fields){
+        if (f.key===target) continue;
+        const inp = grid.querySelector('[data-field="'+f.key+'"]');
+        const raw = inp.value;
+        let v = parseFloat(raw);
+        if (raw==='' || isNaN(v)) { missing=f.label; break; }
+        if (f.percent) v/=100;
+        vals[f.key]=v;
+      }
+      if (missing){ stamp.textContent='Fill in "'+missing+'" first'; stamp.className='result-stamp show error'; return; }
+      try{
+        let result;
+        if (target==='pv') result = tvmSolvePV(vals.n, vals.i, vals.pmt, vals.fv);
+        else if (target==='fv') result = tvmSolveFV(vals.n, vals.i, vals.pv, vals.pmt);
+        else if (target==='pmt') result = tvmSolvePMT(vals.n, vals.i, vals.pv, vals.fv);
+        else if (target==='n') result = tvmSolveN(vals.i, vals.pv, vals.pmt, vals.fv);
+        else if (target==='i') result = tvmSolveI(vals.n, vals.pv, vals.pmt, vals.fv);
+        const tf = fields.find(f=>f.key===target);
+        const inp = grid.querySelector('[data-field="'+target+'"]');
+        inp.value = tf.percent ? round(result*100,6) : round(result, tf.currency?2:6);
+        stamp.textContent = tf.label.split(' — ')[0] + ' = ' + (tf.percent? round(result*100,4)+'%' : (tf.currency? '$'+result.toLocaleString(undefined,{maximumFractionDigits:2}) : round(result,4)));
+        stamp.className='result-stamp show';
+      }catch(e){ stamp.textContent = e.message || 'Could not solve — check your inputs.'; stamp.className='result-stamp show error'; }
+    });
+    resetBtn.addEventListener('click', ()=>{
+      fields.forEach(f=>{ grid.querySelector('[data-field="'+f.key+'"]').value=''; });
+      grid.querySelector('[data-field="pmt"]').disabled=true;
+      stamp.classList.remove('show');
+    });
+    host.appendChild(card);
+
+    host.appendChild(buildAlgebraicCard({
+      title:'APR ↔ Effective Annual Rate',
+      desc:'The same conversion as on the Time Value of Money tab, handy here for pricing a loan\u2019s true annual cost.',
+      formula:'EAR = (1 + APR ÷ m)^m − 1',
+      defaultTarget:'ear',
+      fields:[
+        {key:'apr', label:'APR (nominal)', percent:true},
+        {key:'m', label:'Compounding Periods / Year', round:4, default:12},
+        {key:'ear', label:'Effective Annual Rate', percent:true},
+      ],
+      solvers:{
+        ear: v => Math.pow(1+v.apr/v.m, v.m) - 1,
+        apr: v => v.m * (Math.pow(1+v.ear, 1/v.m) - 1),
+        m: v => bisect(m => Math.pow(1+v.apr/m, m) - 1 - v.ear, 1, 5000, 400),
+      }
+    }));
+
+    host.appendChild(buildAlgebraicCard({
+      title:'Amortization — One Period\u2019s Split',
+      desc:'Break a single loan payment into its interest and principal pieces.',
+      formula:'Interest = Balance × Rate  ·  Principal = Payment − Interest',
+      defaultTarget:'principal',
+      fields:[
+        {key:'balance', label:'Beginning Loan Balance', currency:true},
+        {key:'rate', label:'Periodic Interest Rate', percent:true},
+        {key:'payment', label:'Total Payment', currency:true},
+        {key:'interest', label:'Interest Portion', currency:true},
+        {key:'principal', label:'Principal Portion', currency:true},
+      ],
+      solvers:{
+        interest: v => v.balance * v.rate,
+        principal: v => v.payment - (v.interest !== undefined ? v.interest : v.balance*v.rate),
+        payment: v => v.interest + v.principal,
+        balance: v => v.interest / v.rate,
+        rate: v => v.interest / v.balance,
+      }
+    }));
+
+    host.appendChild(buildAlgebraicCard({
+      title:'Loan / Lease Payment with a Residual Value',
+      desc:'For financing where part of the price is paid off through payments and the rest remains as a balloon or residual value at the end (e.g., a car lease).',
+      formula:'Price = Payment × Annuity Factor + Residual ÷ (1+i)ⁿ',
+      defaultTarget:'payment',
+      fields:[
+        {key:'price', label:'Price Today', currency:true},
+        {key:'residual', label:'Residual Value at End', currency:true},
+        {key:'periods', label:'Number of Payments', round:4},
+        {key:'apr', label:'APR', percent:true, hint:'annual, compounded monthly'},
+        {key:'payment', label:'Payment per Period', currency:true},
+      ],
+      solvers:{
+        payment: v => -tvmSolvePMT(v.periods, v.apr/12, v.price, -v.residual),
+        price: v => tvmSolvePV(v.periods, v.apr/12, -v.payment, -v.residual),
+        residual: v => -tvmSolveFV(v.periods, v.apr/12, v.price, -v.payment),
+        apr: v => tvmSolveI(v.periods, v.price, -v.payment, -v.residual) * 12,
+        periods: v => tvmSolveN(v.apr/12, v.price, -v.payment, -v.residual),
+      },
+      note:'Uses monthly compounding (APR ÷ 12) with payments each month, matching the classic auto-loan/lease setup.'
+    }));
+
+    host.appendChild(buildAmortizationScheduleCard());
+  }
+},
+
+{ id:'bonds', group:'Foundations', label:'Bonds',
+  eyebrow:'Section 03 · Foundations',
+  title:'Bonds',
+  desc:'Coupon math, bond pricing against a yield to maturity, zero-coupon bonds, and pricing from a term structure of spot rates.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Coupon Payment',
+      desc:'The cash paid out each period on a coupon bond.',
+      formula:'Coupon Payment = (Coupon Rate × Face Value) ÷ Payments per Year',
+      defaultTarget:'coupon',
+      fields:[
+        {key:'rate', label:'Coupon Rate (annual)', percent:true},
+        {key:'face', label:'Face (Par) Value', currency:true},
+        {key:'m', label:'Payments per Year', round:4, default:2},
+        {key:'coupon', label:'Coupon Payment', currency:true},
+      ],
+      solvers:{
+        coupon: v => (v.rate*v.face)/v.m,
+        rate: v => (v.coupon*v.m)/v.face,
+        face: v => (v.coupon*v.m)/v.rate,
+        m: v => (v.rate*v.face)/v.coupon,
+      }
+    }));
+
+    cardCounter++;
+    const bcard = document.createElement('div');
+    bcard.className='card'; bcard.setAttribute('data-num', String(cardCounter).padStart(3,'0'));
+    bcard.innerHTML = `<h3>Coupon Bond Price &amp; Yield to Maturity</h3>
+      <p class="card-desc">Price a standard coupon bond, or back into the yield to maturity the market is implying from its price.</p>
+      <div class="formula">Price = Coupon×[1−(1+y)⁻ⁿ]/y + Face×(1+y)⁻ⁿ &nbsp;(y = periodic YTM, n = total periods)</div>`;
+    const bgrid = document.createElement('div'); bgrid.className='field-grid'; bcard.appendChild(bgrid);
+    const bfields=[
+      {key:'face', label:'Face Value', currency:true},
+      {key:'rate', label:'Coupon Rate (annual)', percent:true},
+      {key:'m', label:'Payments per Year', round:4},
+      {key:'years', label:'Years to Maturity', round:4},
+      {key:'ytm', label:'Yield to Maturity (annual)', percent:true},
+      {key:'price', label:'Bond Price', currency:true},
+    ];
+    const buid='bond1';
+    bfields.forEach(f=>{
+      const row=document.createElement('div'); row.className='field-row'; row.setAttribute('data-key',f.key);
+      if (f.key==='price') row.classList.add('is-target');
+      row.innerHTML = `<div class="radio-wrap"><input type="radio" name="${buid}-target" id="${buid}-r-${f.key}" value="${f.key}" ${f.key==='price'?'checked':''}></div>
+        <label class="field-label" for="${buid}-r-${f.key}">${f.label}</label>
+        <div class="input-wrap">${f.currency?'<span class="affix prefix">$</span>':''}<input type="text" data-field="${f.key}" class="${f.currency?'has-prefix':''} ${f.percent?'has-suffix':''}" ${f.key==='price'?'disabled':''}>${f.percent?'<span class="affix suffix">%</span>':''}</div>`;
+      bgrid.appendChild(row);
+      row.querySelector('input[type=radio]').addEventListener('change', ()=>{
+        bgrid.querySelectorAll('.field-row').forEach(r=>r.classList.remove('is-target'));
+        row.classList.add('is-target');
+        bgrid.querySelectorAll('input[data-field]').forEach(inp=>inp.disabled=false);
+        const inp=row.querySelector('input[data-field]'); inp.value=''; inp.disabled=true;
+        bstamp.classList.remove('show');
+      });
+    });
+    const bfoot=document.createElement('div'); bfoot.className='card-foot';
+    const bsolve=document.createElement('button'); bsolve.className='solve-btn'; bsolve.textContent='Solve';
+    const breset=document.createElement('button'); breset.className='reset-btn'; breset.textContent='Reset';
+    const bstamp=document.createElement('span'); bstamp.className='result-stamp';
+    bfoot.appendChild(bsolve); bfoot.appendChild(breset); bfoot.appendChild(bstamp);
+    bcard.appendChild(bfoot);
+    bsolve.addEventListener('click', ()=>{
+      const target = bgrid.querySelector('input[name="'+buid+'-target"]:checked').value;
+      const vals={}; let missing=null;
+      for (const f of bfields){
+        if (f.key===target) continue;
+        const inp=bgrid.querySelector('[data-field="'+f.key+'"]');
+        let v=parseFloat(inp.value);
+        if (inp.value===''||isNaN(v)){missing=f.label;break;}
+        if (f.percent) v/=100;
+        vals[f.key]=v;
+      }
+      if (missing){ bstamp.textContent='Fill in "'+missing+'" first'; bstamp.className='result-stamp show error'; return; }
+      try{
+        let result;
+        const n = vals.years!==undefined && vals.m!==undefined ? vals.years*vals.m : undefined;
+        if (target==='price'){
+          const couponPmt = vals.rate*vals.face/vals.m;
+          const y = vals.ytm/vals.m;
+          result = bondPriceCalc(couponPmt, y, n, vals.face);
+        } else if (target==='ytm'){
+          const couponPmt = vals.rate*vals.face/vals.m;
+          const yPeriodic = bisect(y => bondPriceCalc(couponPmt, y, n, vals.face) - vals.price, -0.99, 5, 400);
+          result = yPeriodic*vals.m;
+        } else if (target==='face'){
+          const y=vals.ytm/vals.m;
+          const bracket = (vals.rate/vals.m)*(1-Math.pow(1+y,-n))/y + Math.pow(1+y,-n);
+          result = vals.price/bracket;
+        } else if (target==='rate'){
+          const y=vals.ytm/vals.m;
+          const df = Math.pow(1+y,-n);
+          result = (vals.price - vals.face*df) * y * vals.m / (vals.face*(1-df));
+        } else if (target==='years'){
+          const couponPmt = vals.rate*vals.face/vals.m;
+          const y = vals.ytm/vals.m;
+          const nSolved = bisect(nn => bondPriceCalc(couponPmt, y, nn, vals.face) - vals.price, 0.01, 400, 400);
+          result = nSolved / vals.m;
+        } else if (target==='m'){
+          throw new Error('Solve payments/year by trying common values (1, 2, 4, 12) directly — it isn\u2019t continuous, so it can\u2019t be solved algebraically.');
+        }
+        const tf = bfields.find(f=>f.key===target);
+        const inp = bgrid.querySelector('[data-field="'+target+'"]');
+        inp.value = tf.percent ? round(result*100,6) : round(result, tf.currency?2:6);
+        bstamp.textContent = tf.label + ' = ' + (tf.percent? round(result*100,4)+'%' : (tf.currency? '$'+result.toLocaleString(undefined,{maximumFractionDigits:2}) : round(result,4)));
+        bstamp.className='result-stamp show';
+      }catch(e){ bstamp.textContent = e.message; bstamp.className='result-stamp show error'; }
+    });
+    breset.addEventListener('click', ()=>{
+      bfields.forEach(f=>{ bgrid.querySelector('[data-field="'+f.key+'"]').value=''; });
+      bgrid.querySelector('[data-field="price"]').disabled=true;
+      bstamp.classList.remove('show');
+    });
+    host.appendChild(bcard);
+
+    host.appendChild(buildAlgebraicCard({
+      title:'Zero-Coupon Bond',
+      desc:'A bond with no coupons — its entire return comes from buying below face value.',
+      formula:'Price = Face Value ÷ (1 + y)ⁿ',
+      defaultTarget:'price',
+      fields:[
+        {key:'face', label:'Face Value', currency:true},
+        {key:'yield', label:'Yield to Maturity', percent:true},
+        {key:'years', label:'Years (or Periods) to Maturity', round:4},
+        {key:'price', label:'Price', currency:true},
+      ],
+      solvers:{
+        price: v => v.face/Math.pow(1+v.yield, v.years),
+        face: v => v.price*Math.pow(1+v.yield, v.years),
+        yield: v => Math.pow(v.face/v.price, 1/v.years) - 1,
+        years: v => Math.log(v.face/v.price)/Math.log(1+v.yield),
+      }
+    }));
+
+    host.appendChild(buildSpotRateBondCard());
+  }
+},
+
+{ id:'stocks', group:'Valuation', label:'Stocks & Equity',
+  eyebrow:'Section 04 · Valuation',
+  title:'Stocks &amp; Equity',
+  desc:'From a simple return on investment up through the constant-growth (Gordon) dividend model.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Return on Investment',
+      formula:'Return = Profit ÷ Investment',
+      defaultTarget:'ret',
+      fields:[
+        {key:'profit', label:'Profit', currency:true},
+        {key:'investment', label:'Investment', currency:true},
+        {key:'ret', label:'Return', percent:true},
+      ],
+      solvers:{ ret: v=>v.profit/v.investment, profit: v=>v.investment*v.ret, investment: v=>v.profit/v.ret }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Book Value of Equity',
+      formula:'Equity = Assets − Liabilities',
+      defaultTarget:'equity',
+      fields:[
+        {key:'assets', label:'Assets', currency:true},
+        {key:'liabilities', label:'Liabilities', currency:true},
+        {key:'equity', label:'Book Value of Equity', currency:true},
+      ],
+      solvers:{ equity: v=>v.assets-v.liabilities, assets: v=>v.equity+v.liabilities, liabilities: v=>v.assets-v.equity }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'P/E Ratio, EPS &amp; Stock Price',
+      formula:'Price = P/E Ratio × EPS',
+      defaultTarget:'price',
+      fields:[
+        {key:'pe', label:'P/E Ratio', round:4, hint:'×'},
+        {key:'eps', label:'Earnings per Share', currency:true},
+        {key:'price', label:'Stock Price', currency:true},
+      ],
+      solvers:{ price: v=>v.pe*v.eps, pe: v=>v.price/v.eps, eps: v=>v.price/v.pe }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Total Dividend Payout',
+      formula:'Total Dividend = Dividend per Share × Shares Outstanding',
+      defaultTarget:'total',
+      fields:[
+        {key:'dps', label:'Dividend per Share', currency:true},
+        {key:'shares', label:'Number of Shares', round:4},
+        {key:'total', label:'Total Dividend Paid', currency:true},
+      ],
+      solvers:{ total: v=>v.dps*v.shares, dps: v=>v.total/v.shares, shares: v=>v.total/v.dps }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Dividend Yield',
+      formula:'Dividend Yield = Dividend per Share ÷ Stock Price',
+      defaultTarget:'yield',
+      fields:[
+        {key:'dps', label:'Dividend per Share', currency:true},
+        {key:'price', label:'Stock Price', currency:true},
+        {key:'yield', label:'Dividend Yield', percent:true},
+      ],
+      solvers:{ yield: v=>v.dps/v.price, dps: v=>v.yield*v.price, price: v=>v.dps/v.yield }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Currency Conversion',
+      formula:'Converted Value = Original Value × Exchange Rate',
+      defaultTarget:'converted',
+      fields:[
+        {key:'original', label:'Original Value', currency:true},
+        {key:'fx', label:'Exchange Rate', round:6},
+        {key:'converted', label:'Converted Value', currency:true},
+      ],
+      solvers:{ converted: v=>v.original*v.fx, original: v=>v.converted/v.fx, fx: v=>v.converted/v.original }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'One-Year Stock Return',
+      desc:'Total return earned holding a stock for one year: the dividend yield plus the capital gain.',
+      formula:'r = D₁/P₀ + (P₁ − P₀)/P₀',
+      defaultTarget:'r',
+      fields:[
+        {key:'d1', label:'Dividend Received (D\u2081)', currency:true},
+        {key:'p0', label:'Beginning Price (P\u2080)', currency:true},
+        {key:'p1', label:'Ending Price (P\u2081)', currency:true},
+        {key:'r', label:'Total Return', percent:true},
+      ],
+      solvers:{
+        r: v => v.d1/v.p0 + (v.p1-v.p0)/v.p0,
+        p1: v => v.p0*(1+v.r) - v.d1,
+        d1: v => v.p0*(1+v.r) - v.p1,
+        p0: v => (v.d1+v.p1)/(1+v.r),
+      },
+      note:'Capital gain rate alone is (P\u2081−P\u2080)/P\u2080; dividend yield alone is D\u2081/P\u2080.'
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Constant-Growth (Gordon) Stock Price',
+      desc:'Values a stock as the present value of a dividend that grows forever at a constant rate.',
+      formula:'P\u2080 = D\u2081 ÷ (r − g)',
+      defaultTarget:'p0',
+      fields:[
+        {key:'d1', label:'Next Dividend (D\u2081)', currency:true},
+        {key:'r', label:'Equity Cost of Capital (r)', percent:true},
+        {key:'g', label:'Dividend Growth Rate (g)', percent:true},
+        {key:'p0', label:'Stock Price Today (P\u2080)', currency:true},
+      ],
+      solvers:{
+        p0: v => v.d1/(v.r-v.g),
+        d1: v => v.p0*(v.r-v.g),
+        r: v => v.d1/v.p0 + v.g,
+        g: v => v.r - v.d1/v.p0,
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Sustainable Growth Rate',
+      desc:'How fast a company can grow its dividend by retaining earnings rather than raising outside capital.',
+      formula:'g = Retention Ratio × ROE',
+      defaultTarget:'g',
+      fields:[
+        {key:'retention', label:'Retention Ratio', percent:true},
+        {key:'roe', label:'Return on Equity (ROE)', percent:true},
+        {key:'g', label:'Sustainable Growth Rate', percent:true},
+      ],
+      solvers:{ g: v=>v.retention*v.roe, retention: v=>v.g/v.roe, roe: v=>v.g/v.retention }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Next Dividend from Retention',
+      formula:'D\u2081 = (1 − Retention Ratio) × EPS',
+      defaultTarget:'d1',
+      fields:[
+        {key:'eps', label:'Earnings per Share', currency:true},
+        {key:'retention', label:'Retention Ratio', percent:true},
+        {key:'d1', label:'Next Dividend (D\u2081)', currency:true},
+      ],
+      solvers:{ d1: v=>(1-v.retention)*v.eps, retention: v=>1-(v.d1/v.eps), eps: v=>v.d1/(1-v.retention) }
+    }));
+  }
+},
+
+{ id:'capbudget', group:'Valuation', label:'Capital Budgeting',
+  eyebrow:'Section 05 · Valuation',
+  title:'Capital Budgeting',
+  desc:'Deciding whether a project or investment is worth taking on: NPV, IRR, and payback period.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Present Value of a Future Benefit',
+      formula:'PV = Future Benefit ÷ (1 + r)',
+      defaultTarget:'pv',
+      fields:[
+        {key:'fb', label:'Future Benefit (1 year out)', currency:true},
+        {key:'rate', label:'Cost of Capital', percent:true},
+        {key:'pv', label:'Present Value of Benefit', currency:true},
+      ],
+      solvers:{ pv: v=>v.fb/(1+v.rate), fb: v=>v.pv*(1+v.rate), rate: v=>v.fb/v.pv - 1 },
+      note:'For benefits more than one year away, use the Single Sum calculator on the Time Value of Money tab instead.'
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Net Present Value',
+      formula:'NPV = PV(Benefits) − PV(Costs)',
+      defaultTarget:'npv',
+      fields:[
+        {key:'pvb', label:'PV of Benefits', currency:true},
+        {key:'pvc', label:'PV of Costs', currency:true},
+        {key:'npv', label:'Net Present Value', currency:true},
+      ],
+      solvers:{ npv: v=>v.pvb-v.pvc, pvb: v=>v.npv+v.pvc, pvc: v=>v.pvb-v.npv }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'IRR of a Perpetual Investment',
+      desc:'The internal rate of return for an investment with one upfront cost and a constant cash flow forever.',
+      formula:'IRR = [ −1 + √(1 + 4×Gain÷Cost) ] ÷ 2',
+      defaultTarget:'irr',
+      fields:[
+        {key:'cost', label:'Initial Cost', currency:true},
+        {key:'gain', label:'Perpetual Annual Gain', currency:true},
+        {key:'irr', label:'IRR', percent:true},
+      ],
+      solvers:{
+        irr: v => (-1+Math.sqrt(1+4*(v.gain/v.cost)))/2,
+        cost: v => v.gain/(v.irr*v.irr+v.irr),
+        gain: v => v.cost*(v.irr*v.irr+v.irr),
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'IRR vs. Required Return',
+      formula:'Deviation = IRR − Cost of Capital',
+      defaultTarget:'dev',
+      fields:[
+        {key:'irr', label:'IRR', percent:true},
+        {key:'coc', label:'Cost of Capital', percent:true},
+        {key:'dev', label:'Deviation (margin of safety)', percent:true},
+      ],
+      solvers:{ dev: v=>v.irr-v.coc, irr: v=>v.coc+v.dev, coc: v=>v.irr-v.dev },
+      note:'A positive deviation means the project clears its required return — same idea as a positive NPV.'
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Payback Period',
+      formula:'Payback Period = Cost ÷ Payment per Period',
+      defaultTarget:'payback',
+      fields:[
+        {key:'cost', label:'Cost', currency:true},
+        {key:'payment', label:'Payment Received per Period', currency:true},
+        {key:'payback', label:'Payback Period', round:4, suffixLabel:'periods'},
+      ],
+      solvers:{ payback: v=>v.cost/v.payment, cost: v=>v.payback*v.payment, payment: v=>v.cost/v.payback }
+    }));
+  }
+},
+
+{ id:'fcf', group:'Valuation', label:'Free Cash Flow',
+  eyebrow:'Section 06 · Valuation',
+  title:'Free Cash Flow &amp; Working Capital',
+  desc:'Building free cash flow up from a project\u2019s depreciation, incremental revenue, and working-capital needs.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Straight-Line Depreciation',
+      formula:'Annual Depreciation = (Purchase Cost + Installation) ÷ Useful Life',
+      defaultTarget:'dep',
+      fields:[
+        {key:'cost', label:'Purchase Cost', currency:true},
+        {key:'install', label:'Installation Cost', currency:true},
+        {key:'life', label:'Useful Life', round:4, hint:'years'},
+        {key:'dep', label:'Annual Depreciation', currency:true},
+      ],
+      solvers:{
+        dep: v => (v.cost+v.install)/v.life,
+        life: v => (v.cost+v.install)/v.dep,
+        cost: v => v.dep*v.life - v.install,
+        install: v => v.dep*v.life - v.cost,
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Incremental Revenue',
+      formula:'Incremental Revenue = Total Units × % Sales Increase × Price per Unit',
+      defaultTarget:'rev',
+      fields:[
+        {key:'units', label:'Total Units', round:4},
+        {key:'increase', label:'Sales Increase', percent:true},
+        {key:'price', label:'Price per Unit', currency:true},
+        {key:'rev', label:'Incremental Revenue', currency:true},
+      ],
+      solvers:{
+        rev: v => v.units*v.increase*v.price,
+        units: v => v.rev/(v.increase*v.price),
+        increase: v => v.rev/(v.units*v.price),
+        price: v => v.rev/(v.units*v.increase),
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Free Cash Flow',
+      formula:'FCF = Earnings + Depreciation − Δ Net Working Capital',
+      defaultTarget:'fcf',
+      fields:[
+        {key:'earnings', label:'Earnings', currency:true},
+        {key:'dep', label:'Depreciation Expense', currency:true},
+        {key:'nwc', label:'Change in Net Working Capital', currency:true},
+        {key:'fcf', label:'Free Cash Flow', currency:true},
+      ],
+      solvers:{
+        fcf: v => v.earnings+v.dep-v.nwc,
+        earnings: v => v.fcf-v.dep+v.nwc,
+        dep: v => v.fcf-v.earnings+v.nwc,
+        nwc: v => v.earnings+v.dep-v.fcf,
+      }
+    }));
+  }
+},
+
+{ id:'valuation', group:'Valuation', label:'Company Valuation',
+  eyebrow:'Section 07 · Valuation',
+  title:'Company Valuation',
+  desc:'From a single-year DCF snapshot up to a full multi-year discounted cash flow with a terminal value.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Enterprise Value &amp; Share Price (single-year FCF)',
+      formula:'EV = FCF + Cash − Debt  ·  Share Price = EV ÷ Shares',
+      defaultTarget:'ev',
+      fields:[
+        {key:'fcf', label:'Free Cash Flow', currency:true},
+        {key:'cash', label:'Cash', currency:true},
+        {key:'debt', label:'Debt', currency:true},
+        {key:'shares', label:'Shares Outstanding', round:4},
+        {key:'ev', label:'Enterprise Value', currency:true},
+        {key:'price', label:'Share Price', currency:true},
+      ],
+      solvers:{
+        ev: v => v.fcf+v.cash-v.debt,
+        fcf: v => v.ev-v.cash+v.debt,
+        cash: v => v.ev-v.fcf+v.debt,
+        debt: v => v.fcf+v.cash-v.ev,
+        price: v => (v.ev!==undefined ? v.ev : (v.fcf+v.cash-v.debt))/v.shares,
+        shares: v => (v.ev!==undefined ? v.ev : (v.fcf+v.cash-v.debt))/v.price,
+      },
+      note:'Solving Share Price or Shares needs Enterprise Value filled in (solve it above first, or fill FCF/Cash/Debt).'
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Gordon Growth Firm Value',
+      formula:'Firm Value = FCF ÷ (r − g)',
+      defaultTarget:'value',
+      fields:[
+        {key:'fcf', label:'Free Cash Flow', currency:true},
+        {key:'r', label:'Cost of Capital', percent:true},
+        {key:'g', label:'Growth Rate', percent:true},
+        {key:'value', label:'Firm Value', currency:true},
+      ],
+      solvers:{
+        value: v => v.fcf/(v.r-v.g),
+        fcf: v => v.value*(v.r-v.g),
+        r: v => v.fcf/v.value + v.g,
+        g: v => v.r - v.fcf/v.value,
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Share Price with Growth (Cash &amp; Debt Bridge)',
+      formula:'Price = [ FCF ÷ (r − g) + Cash − Debt ] ÷ Shares',
+      defaultTarget:'price',
+      fields:[
+        {key:'fcf', label:'Free Cash Flow', currency:true},
+        {key:'r', label:'Cost of Capital', percent:true},
+        {key:'g', label:'Growth Rate', percent:true},
+        {key:'cash', label:'Cash', currency:true},
+        {key:'debt', label:'Debt', currency:true},
+        {key:'shares', label:'Shares Outstanding', round:4},
+        {key:'price', label:'Share Price', currency:true},
+      ],
+      solvers:{
+        price: v => (v.fcf/(v.r-v.g) + v.cash - v.debt)/v.shares,
+        fcf: v => (v.price*v.shares - v.cash + v.debt)*(v.r-v.g),
+        shares: v => (v.fcf/(v.r-v.g) + v.cash - v.debt)/v.price,
+        cash: v => v.price*v.shares - v.fcf/(v.r-v.g) + v.debt,
+        debt: v => v.fcf/(v.r-v.g) + v.cash - v.price*v.shares,
+      },
+      note:'For r or g, use the Gordon Growth Firm Value calculator above with Firm Value = FCF/(r-g) isolated first.'
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Weighted Average Cost of Capital (WACC)', isNew:true,
+      desc:'The blended discount rate a company pays across all its investors — usually the discount rate plugged into the DCF below.',
+      formula:'WACC = [E/(E+D)]×Rₑ + [D/(E+D)]×R_d×(1−Tax Rate)',
+      defaultTarget:'wacc',
+      fields:[
+        {key:'equity', label:'Market Value of Equity', currency:true},
+        {key:'debt', label:'Market Value of Debt', currency:true},
+        {key:'coste', label:'Cost of Equity (Rₑ)', percent:true},
+        {key:'costd', label:'Cost of Debt (R_d)', percent:true},
+        {key:'tax', label:'Tax Rate', percent:true},
+        {key:'wacc', label:'WACC', percent:true},
+      ],
+      solvers:{
+        wacc: v => (v.equity/(v.equity+v.debt))*v.coste + (v.debt/(v.equity+v.debt))*v.costd*(1-v.tax),
+        coste: v => (v.wacc - (v.debt/(v.equity+v.debt))*v.costd*(1-v.tax)) / (v.equity/(v.equity+v.debt)),
+        costd: v => (v.wacc - (v.equity/(v.equity+v.debt))*v.coste) / ((v.debt/(v.equity+v.debt))*(1-v.tax)),
+        tax: v => 1 - (v.wacc - (v.equity/(v.equity+v.debt))*v.coste) / ((v.debt/(v.equity+v.debt))*v.costd),
+        equity: v => v.debt*(v.costd*(1-v.tax) - v.wacc) / (v.wacc - v.coste),
+        debt: v => v.equity*(v.coste - v.wacc) / (v.wacc - v.costd*(1-v.tax)),
+      }
+    }));
+    host.appendChild(buildDCFCard());
+  }
+},
+
+{ id:'ratios', group:'Extended Toolkit', label:'Financial Ratios',
+  eyebrow:'Section 08 · Extended Toolkit',
+  title:'Financial Ratios',
+  desc:'The core ratios used to read a company\u2019s liquidity, profitability, and leverage at a glance.',
+  build:(host)=>{
+    const ratioCard = (title, formula, aKey, aLabel, bKey, bLabel, cKey, cLabel) => buildAlgebraicCard({
+      title, formula, isNew:true, defaultTarget:cKey,
+      fields:[{key:aKey,label:aLabel,currency:true},{key:bKey,label:bLabel,currency:true},{key:cKey,label:cLabel,round:4,percent:false}],
+      solvers:{ [cKey]: v=>v[aKey]/v[bKey], [aKey]: v=>v[cKey]*v[bKey], [bKey]: v=>v[aKey]/v[cKey] }
+    });
+    host.appendChild(ratioCard('Current Ratio','Current Ratio = Current Assets ÷ Current Liabilities','ca','Current Assets','cl','Current Liabilities','ratio','Current Ratio'));
+    host.appendChild(buildAlgebraicCard({
+      title:'Quick (Acid-Test) Ratio', isNew:true,
+      formula:'Quick Ratio = (Current Assets − Inventory) ÷ Current Liabilities',
+      defaultTarget:'ratio',
+      fields:[
+        {key:'ca', label:'Current Assets', currency:true},
+        {key:'inv', label:'Inventory', currency:true},
+        {key:'cl', label:'Current Liabilities', currency:true},
+        {key:'ratio', label:'Quick Ratio', round:4},
+      ],
+      solvers:{
+        ratio: v => (v.ca-v.inv)/v.cl,
+        ca: v => v.ratio*v.cl + v.inv,
+        inv: v => v.ca - v.ratio*v.cl,
+        cl: v => (v.ca-v.inv)/v.ratio,
+      }
+    }));
+    host.appendChild(ratioCard('Gross Margin','Gross Margin = Gross Profit ÷ Revenue','gp','Gross Profit','rev','Revenue','margin','Gross Margin'));
+    host.appendChild(buildAlgebraicCard({
+      title:'Net Profit Margin', isNew:true,
+      formula:'Net Margin = Net Income ÷ Revenue',
+      defaultTarget:'margin',
+      fields:[{key:'ni',label:'Net Income',currency:true},{key:'rev',label:'Revenue',currency:true},{key:'margin',label:'Net Profit Margin',percent:true}],
+      solvers:{ margin: v=>v.ni/v.rev, ni: v=>v.margin*v.rev, rev: v=>v.ni/v.margin }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Return on Assets (ROA)', isNew:true,
+      formula:'ROA = Net Income ÷ Total Assets',
+      defaultTarget:'roa',
+      fields:[{key:'ni',label:'Net Income',currency:true},{key:'assets',label:'Total Assets',currency:true},{key:'roa',label:'ROA',percent:true}],
+      solvers:{ roa: v=>v.ni/v.assets, ni: v=>v.roa*v.assets, assets: v=>v.ni/v.roa }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Return on Equity (ROE)', isNew:true,
+      formula:'ROE = Net Income ÷ Shareholders\u2019 Equity',
+      defaultTarget:'roe',
+      fields:[{key:'ni',label:'Net Income',currency:true},{key:'equity',label:'Shareholders\u2019 Equity',currency:true},{key:'roe',label:'ROE',percent:true}],
+      solvers:{ roe: v=>v.ni/v.equity, ni: v=>v.roe*v.equity, equity: v=>v.ni/v.roe }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Debt-to-Equity Ratio', isNew:true,
+      formula:'D/E = Total Debt ÷ Shareholders\u2019 Equity',
+      defaultTarget:'de',
+      fields:[{key:'debt',label:'Total Debt',currency:true},{key:'equity',label:'Shareholders\u2019 Equity',currency:true},{key:'de',label:'Debt-to-Equity',round:4}],
+      solvers:{ de: v=>v.debt/v.equity, debt: v=>v.de*v.equity, equity: v=>v.debt/v.de }
+    }));
+  }
+},
+
+{ id:'depreciation', group:'Extended Toolkit', label:'Depreciation Methods',
+  eyebrow:'Section 09 · Extended Toolkit',
+  title:'Depreciation Methods',
+  desc:'Straight-line lives on the Free Cash Flow tab; here are the two other most commonly used methods.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Double-Declining-Balance Depreciation', isNew:true,
+      desc:'An accelerated method: each year\u2019s expense is a fixed rate applied to the asset\u2019s remaining book value.',
+      formula:'Depreciation Expense = Beginning Book Value × (2 ÷ Useful Life)',
+      defaultTarget:'dep',
+      fields:[
+        {key:'bv', label:'Beginning Book Value', currency:true},
+        {key:'life', label:'Useful Life', round:4, hint:'years'},
+        {key:'dep', label:'Depreciation Expense', currency:true},
+      ],
+      solvers:{
+        dep: v => v.bv*(2/v.life),
+        bv: v => v.dep/(2/v.life),
+        life: v => 2*v.bv/v.dep,
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Units-of-Production Depreciation', isNew:true,
+      desc:'Ties depreciation to actual usage rather than the passage of time.',
+      formula:'Depreciation Expense = [(Cost − Salvage) ÷ Total Estimated Units] × Units This Period',
+      defaultTarget:'dep',
+      fields:[
+        {key:'cost', label:'Cost', currency:true},
+        {key:'salvage', label:'Salvage Value', currency:true},
+        {key:'totalUnits', label:'Total Estimated Units', round:4},
+        {key:'unitsUsed', label:'Units This Period', round:4},
+        {key:'dep', label:'Depreciation Expense', currency:true},
+      ],
+      solvers:{
+        dep: v => ((v.cost-v.salvage)/v.totalUnits)*v.unitsUsed,
+        cost: v => (v.dep/v.unitsUsed)*v.totalUnits + v.salvage,
+        salvage: v => v.cost - (v.dep/v.unitsUsed)*v.totalUnits,
+        totalUnits: v => (v.cost-v.salvage)*v.unitsUsed/v.dep,
+        unitsUsed: v => v.dep*v.totalUnits/(v.cost-v.salvage),
+      }
+    }));
+  }
+},
+
+{ id:'breakeven', group:'Extended Toolkit', label:'Break-Even Analysis',
+  eyebrow:'Section 10 · Extended Toolkit',
+  title:'Break-Even Analysis',
+  desc:'How many units — or how much revenue — a business needs before it starts turning a profit.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Break-Even Units', isNew:true,
+      formula:'Break-Even Units = Fixed Costs ÷ (Price − Variable Cost per Unit)',
+      defaultTarget:'units',
+      fields:[
+        {key:'fixed', label:'Fixed Costs', currency:true},
+        {key:'price', label:'Price per Unit', currency:true},
+        {key:'vc', label:'Variable Cost per Unit', currency:true},
+        {key:'units', label:'Break-Even Units', round:4},
+      ],
+      solvers:{
+        units: v => v.fixed/(v.price-v.vc),
+        fixed: v => v.units*(v.price-v.vc),
+        price: v => v.fixed/v.units + v.vc,
+        vc: v => v.price - v.fixed/v.units,
+      }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Break-Even Revenue', isNew:true,
+      formula:'Break-Even Revenue = Break-Even Units × Price per Unit',
+      defaultTarget:'revenue',
+      fields:[
+        {key:'units', label:'Break-Even Units', round:4},
+        {key:'price', label:'Price per Unit', currency:true},
+        {key:'revenue', label:'Break-Even Revenue', currency:true},
+      ],
+      solvers:{ revenue: v=>v.units*v.price, units: v=>v.revenue/v.price, price: v=>v.revenue/v.units }
+    }));
+  }
+},
+
+{ id:'basics', group:'Extended Toolkit', label:'Accounting Basics',
+  eyebrow:'Section 11 · Extended Toolkit',
+  title:'Accounting Basics',
+  desc:'The core equations underneath everything else in accounting — worth having on hand even if the rest of this ledger is more finance-flavored.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'The Accounting Equation', isNew:true,
+      formula:'Assets = Liabilities + Equity',
+      defaultTarget:'assets',
+      fields:[
+        {key:'liabilities', label:'Liabilities', currency:true},
+        {key:'equity', label:'Equity', currency:true},
+        {key:'assets', label:'Assets', currency:true},
+      ],
+      solvers:{ assets: v=>v.liabilities+v.equity, liabilities: v=>v.assets-v.equity, equity: v=>v.assets-v.liabilities }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Net Income', isNew:true,
+      formula:'Net Income = Revenue − Expenses',
+      defaultTarget:'ni',
+      fields:[
+        {key:'revenue', label:'Revenue', currency:true},
+        {key:'expenses', label:'Expenses', currency:true},
+        {key:'ni', label:'Net Income', currency:true},
+      ],
+      solvers:{ ni: v=>v.revenue-v.expenses, revenue: v=>v.ni+v.expenses, expenses: v=>v.revenue-v.ni }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Retained Earnings Roll-Forward', isNew:true,
+      formula:'Ending RE = Beginning RE + Net Income − Dividends',
+      defaultTarget:'ending',
+      fields:[
+        {key:'beginning', label:'Beginning Retained Earnings', currency:true},
+        {key:'ni', label:'Net Income', currency:true},
+        {key:'dividends', label:'Dividends Paid', currency:true},
+        {key:'ending', label:'Ending Retained Earnings', currency:true},
+      ],
+      solvers:{
+        ending: v => v.beginning+v.ni-v.dividends,
+        beginning: v => v.ending-v.ni+v.dividends,
+        ni: v => v.ending-v.beginning+v.dividends,
+        dividends: v => v.beginning+v.ni-v.ending,
+      }
+    }));
+  }
+},
+
+{ id:'practical', group:'Extended Toolkit', label:'Practical Toolkit',
+  eyebrow:'Section 12 · Extended Toolkit',
+  title:'Practical Toolkit',
+  desc:'A few everyday calculators that come up constantly outside the classroom — pricing, cash-cycle analysis, quick mental-math estimates, and more.',
+  build:(host)=>{
+    host.appendChild(buildAlgebraicCard({
+      title:'Rule of 72 — Time to Double', isNew:true,
+      desc:'A fast mental-math estimate for how long it takes an investment to double at a given annual rate.',
+      formula:'Years to Double ≈ 72 ÷ Rate (as a whole number, e.g. 8 for 8%)',
+      defaultTarget:'years',
+      fields:[
+        {key:'rate', label:'Annual Rate', percent:true},
+        {key:'years', label:'Years to Double', round:2},
+      ],
+      solvers:{
+        years: v => 72/(v.rate*100),
+        rate: v => 72/v.years/100,
+      },
+      note:'A quick approximation, not an exact answer — for the exact figure, use the Single Sum calculator on the Time Value of Money tab (solve for years with FV = 2 × PV).'
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Markup Pricing', isNew:true,
+      desc:'Price a product as a percentage added on top of cost. A classic pricing mistake is confusing this with margin (below) — they give different prices for the same target percentage.',
+      formula:'Price = Cost × (1 + Markup)',
+      defaultTarget:'price',
+      fields:[
+        {key:'cost', label:'Cost', currency:true},
+        {key:'markup', label:'Markup', percent:true},
+        {key:'price', label:'Price', currency:true},
+      ],
+      solvers:{ price: v=>v.cost*(1+v.markup), cost: v=>v.price/(1+v.markup), markup: v=>(v.price-v.cost)/v.cost }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Margin Pricing', isNew:true,
+      desc:'Price a product to hit a target profit margin, expressed as a percentage of the selling price rather than of cost.',
+      formula:'Price = Cost ÷ (1 − Margin)',
+      defaultTarget:'price',
+      fields:[
+        {key:'cost', label:'Cost', currency:true},
+        {key:'margin', label:'Margin', percent:true},
+        {key:'price', label:'Price', currency:true},
+      ],
+      solvers:{ price: v=>v.cost/(1-v.margin), cost: v=>v.price*(1-v.margin), margin: v=>(v.price-v.cost)/v.price }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Markup ↔ Margin Converter', isNew:true,
+      desc:'Convert directly between the two without needing the cost or price at all.',
+      formula:'Margin = Markup ÷ (1 + Markup) &nbsp;·&nbsp; Markup = Margin ÷ (1 − Margin)',
+      defaultTarget:'margin',
+      fields:[
+        {key:'markup', label:'Markup', percent:true},
+        {key:'margin', label:'Margin', percent:true},
+      ],
+      solvers:{ margin: v=>v.markup/(1+v.markup), markup: v=>v.margin/(1-v.margin) }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Capitalization Rate (Real Estate)', isNew:true,
+      desc:'A quick yardstick for comparing income-producing properties, independent of financing.',
+      formula:'Cap Rate = Net Operating Income ÷ Property Value',
+      defaultTarget:'caprate',
+      fields:[
+        {key:'noi', label:'Net Operating Income (annual)', currency:true},
+        {key:'value', label:'Property Value', currency:true},
+        {key:'caprate', label:'Cap Rate', percent:true},
+      ],
+      solvers:{ caprate: v=>v.noi/v.value, noi: v=>v.caprate*v.value, value: v=>v.noi/v.caprate }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Effective Tax Rate', isNew:true,
+      formula:'Effective Tax Rate = Total Tax ÷ Taxable Income',
+      defaultTarget:'rate',
+      fields:[
+        {key:'tax', label:'Total Tax Paid', currency:true},
+        {key:'income', label:'Taxable Income', currency:true},
+        {key:'rate', label:'Effective Tax Rate', percent:true},
+      ],
+      solvers:{ rate: v=>v.tax/v.income, tax: v=>v.rate*v.income, income: v=>v.tax/v.rate }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Days Sales Outstanding (DSO)', isNew:true,
+      desc:'How many days on average it takes to collect cash after a sale.',
+      formula:'DSO = (Accounts Receivable ÷ Revenue) × 365',
+      defaultTarget:'dso',
+      fields:[
+        {key:'ar', label:'Accounts Receivable', currency:true},
+        {key:'revenue', label:'Annual Revenue', currency:true},
+        {key:'dso', label:'Days Sales Outstanding', round:2, suffixLabel:'days'},
+      ],
+      solvers:{ dso: v=>(v.ar/v.revenue)*365, ar: v=>(v.dso/365)*v.revenue, revenue: v=>(v.ar*365)/v.dso }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Days Inventory Outstanding (DIO)', isNew:true,
+      desc:'How many days on average inventory sits before it\u2019s sold.',
+      formula:'DIO = (Inventory ÷ COGS) × 365',
+      defaultTarget:'dio',
+      fields:[
+        {key:'inv', label:'Inventory', currency:true},
+        {key:'cogs', label:'Cost of Goods Sold (annual)', currency:true},
+        {key:'dio', label:'Days Inventory Outstanding', round:2, suffixLabel:'days'},
+      ],
+      solvers:{ dio: v=>(v.inv/v.cogs)*365, inv: v=>(v.dio/365)*v.cogs, cogs: v=>(v.inv*365)/v.dio }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Days Payable Outstanding (DPO)', isNew:true,
+      desc:'How many days on average a company takes to pay its own suppliers.',
+      formula:'DPO = (Accounts Payable ÷ COGS) × 365',
+      defaultTarget:'dpo',
+      fields:[
+        {key:'ap', label:'Accounts Payable', currency:true},
+        {key:'cogs', label:'Cost of Goods Sold (annual)', currency:true},
+        {key:'dpo', label:'Days Payable Outstanding', round:2, suffixLabel:'days'},
+      ],
+      solvers:{ dpo: v=>(v.ap/v.cogs)*365, ap: v=>(v.dpo/365)*v.cogs, cogs: v=>(v.ap*365)/v.dpo }
+    }));
+    host.appendChild(buildAlgebraicCard({
+      title:'Cash Conversion Cycle', isNew:true,
+      desc:'How many days cash is tied up in operations, from paying suppliers to collecting from customers.',
+      formula:'CCC = DSO + DIO − DPO',
+      defaultTarget:'ccc',
+      fields:[
+        {key:'dso', label:'Days Sales Outstanding', round:2},
+        {key:'dio', label:'Days Inventory Outstanding', round:2},
+        {key:'dpo', label:'Days Payable Outstanding', round:2},
+        {key:'ccc', label:'Cash Conversion Cycle', round:2, suffixLabel:'days'},
+      ],
+      solvers:{
+        ccc: v => v.dso+v.dio-v.dpo,
+        dso: v => v.ccc-v.dio+v.dpo,
+        dio: v => v.ccc-v.dso+v.dpo,
+        dpo: v => v.dso+v.dio-v.ccc,
+      },
+      note:'Feed this from the three calculators above, or from a company\u2019s financial statements directly.'
+    }));
+  }
+},
+
+];
+
+/* =========================================================================
+   RENDER
+   ========================================================================= */
+function renderApp(){
+  const nav = document.getElementById('nav-tabs');
+  const main = document.getElementById('main-content');
+  let currentGroup = null;
+
+  TABS.forEach((tab, i) => {
+    if (tab.group !== currentGroup){
+      currentGroup = tab.group;
+      const gl = document.createElement('div'); gl.className = 'group-label'; gl.textContent = currentGroup;
+      nav.appendChild(gl);
+    }
+    const btn = document.createElement('button');
+    btn.setAttribute('data-tab', tab.id);
+    btn.innerHTML = '<span class="idx">'+String(i+1).padStart(2,'0')+'</span><span>'+tab.label+'</span>';
+    btn.addEventListener('click', () => activateTab(tab.id));
+    nav.appendChild(btn);
+
+    const section = document.createElement('section');
+    section.className = 'tab-section';
+    section.id = 'tab-' + tab.id;
+    section.innerHTML = `
+      <div class="page-head">
+        <p class="eyebrow">${tab.eyebrow}</p>
+        <h1>${tab.title}</h1>
+        <p class="desc">${tab.desc}</p>
+      </div>
+      <div class="cards" id="cards-${tab.id}"></div>
+    `;
+    main.appendChild(section);
+    tab.build(section.querySelector('#cards-'+tab.id));
+  });
+
+  function activateTab(id){
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab')===id));
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.toggle('active', s.id === 'tab-'+id));
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+  activateTab(TABS[0].id);
+}
+
+document.addEventListener('DOMContentLoaded', renderApp);
+
+</script>
+</body>
+</html>
