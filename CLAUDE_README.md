@@ -1,185 +1,82 @@
-# Po# Portfolio Site Instructions
+# Portfolio Reference
 
-## Purpose
+## About Page
 
-This repository contains Jeremy Jackson's personal portfolio website.
+Provide:
 
-The purpose of this website is to showcase:
-- Writing ability
-- Software development projects
+* About text
+* Profile image
 
-The site should remain professional, minimalist, and easy for employers to navigate.
+Update:
 
----
+`js/site-info.js`
 
-# Important Rules
+Image location:
 
-## Do Not Rebuild the Website
-
-The current structure is intentional.
-
-Do not replace the entire site unless specifically requested.
-
-Prefer:
-- Editing existing files
-- Adding new entries
-- Making small improvements
+`images/`
 
 ---
 
-# Main Pages
+## Writing
 
-index.html
-- Homepage
-- About section
-- Profile image
+Provide:
 
-writing.html
-- Displays writing projects
+* PDF
+* Title
+* Short description
+* Category (Essays, Articles, or Etc)
 
-software.html
-- Displays software projects
+Place:
 
----
+* PDF in `writing/<category>/`
 
-# Content Files
+Update:
 
-## Personal Information
+`js/portfolio.js`
 
-File:
-
-js/site-info.js
-
-This controls:
-- Name
-- About section text
-- Profile image path
-
-Update this file when changing homepage information.
+Add a new entry to `writingProjects` using the title, description, category, and PDF path.
 
 ---
 
-## Portfolio Information
+## Software
 
-File:
+Provide:
 
-js/portfolio.js
+* HTML project (or project folder)
+* Project title
+* Short description
+* Preview image
 
-This controls:
-- Writing projects
-- Software projects
+Place:
 
-Add new portfolio entries here instead of manually creating HTML cards.
+* Project in `software/project-name/`
+* Image in `images/`
 
----
+Update:
 
-# Adding Writing Projects
+`js/portfolio.js`
 
-Place files inside:
+Add a new entry to `softwareProjects` containing:
 
-writing/
+* Title
+* Description
+* Image path
+* Project link (`software/project-name/index.html`)
 
-Current organization:
+The software page displays:
 
-writing/
-- essays/
-- articles/
-- etc/
+* Small preview image
+* Project title
+* Short description
+* Link to open the project
 
-Each writing entry should include:
-
-- Title
-- Description
-- PDF link
-
-Example:
-
-{
-    title: "Example Title",
-    description: "Short description of the work.",
-    category: "Essays",
-    link: "writing/essays/example.pdf"
-}
+Use a GitHub link only if one is specifically provided.
 
 ---
 
-# Adding Software Projects
+## Design Changes
 
-Place files inside:
+Provide:
 
-software/
-
-Current organization:
-
-software/
-- games/
-- apps/
-- tools/
-
-Each software entry should include:
-
-- Project title
-- Description
-- Image preview
-- Live demo link
-- GitHub link
-
-Example:
-
-{
-    title: "Project Name",
-    description: "Short description of project.",
-    image: "images/project.png",
-    demo: "project-link",
-    github: "github-link"
-}
-
----
-
-# Design Guidelines
-
-Maintain:
-
-- Beige color palette
-- Minimalist aesthetic
-- Professional appearance
-- Desktop and mobile compatibility
-
-Avoid:
-
-- Excessive animations
-- Bright colors
-- Clutter
-- Generic filler text
-
----
-
-# Before Making Changes
-
-Explain:
-
-1. Which file will be changed
-2. Why the change is needed
-3. Whether other pages could be affected
-
-Keep changes simple and understandable.
-
----
-
-# Git Updates
-
-After making changes:
-
-git add .
-
-git commit -m "Describe changes"
-
-git push
-
----
-
-# Notes
-
-The website is designed so Jeremy can add content without needing to rebuild the site.
-
-Prioritize maintainability and simple editing over unnecessary complexity.
+* `css/style.css`
+* Any HTML page being modified
